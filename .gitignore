@@ -1,0 +1,25 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.vs/
+TestAPI/TestAPI.csproj.user
+
+# MacOS
+.DS_Store
+
+# Node/Vite (si tienes un frontend en ClientApp)
+ClientApp/node_modules/
+ClientApp/dist/
+ClientApp/.env.local
+ClientApp/.env.*
+
+# Logs
+*.log
+
+# IDEs
+.idea/
+.vscode/
