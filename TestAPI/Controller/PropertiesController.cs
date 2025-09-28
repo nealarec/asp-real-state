@@ -54,7 +54,7 @@ public class PropertiesController : ResourceController<Property, PropertyService
     /// Obtiene una propiedad por su ID
     /// </summary>
     /// <param name="id">ID de la propiedad</param>
-    [HttpGet("{id:length(24)}")]
+    [HttpGet("{id:length(24)}", Name = "GetById")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Property))]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -108,5 +108,16 @@ public class PropertiesController : ResourceController<Property, PropertyService
     public async Task<ActionResult<Property>> Update(string id, [FromBody] Property updatedProperty)
     {
         return await base.UpdateAsync(id, updatedProperty);
+    }
+
+    /// <summary>
+    /// Elimina una propiedad existente
+    /// </summary>
+    [HttpDelete("{id:length(24)}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Delete(string id)
+    {
+        return await DeleteAsync(id);
     }
 }

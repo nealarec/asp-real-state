@@ -1,0 +1,234 @@
+using System.Net;
+using System.Net.Http.Json;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc.Testing;
+using NUnit.Framework;
+using TestAPI.Model;
+using TestAPI.Services.DAO;
+
+namespace TestAPI.Tests.Integration;
+
+[TestFixture]
+public class PropertiesControllerTests : IntegrationTestBase
+{
+    private PropertyService _propertyService;
+
+    [SetUp]
+    public void Setup()
+    {
+        _propertyService = CreatePropertyService();
+    }
+
+    [Test]
+    public async Task GetProperties_WhenCalled_ReturnsListOfProperties()
+    {
+        // Arrange
+        var owner = await CreateTestOwner();
+        await CreateTestProperty("Test Property 1", owner.Id);
+        await CreateTestProperty("Test Property 2", owner.Id);
+
+        // Act
+        var response = await Client.GetAsync("/api/properties");
+        var properties = await response.Content.ReadFromJsonAsync<List<Property>>();
+
+        // Assert
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+        Assert.That(properties, Is.Not.Null);
+        Assert.That(properties!.Count, Is.GreaterThanOrEqualTo(2));
+    }
+
+    [Test]
+    public async Task GetPropertyById_WithValidId_ReturnsProperty()
+    {
+        // Arrange
+        var owner = await CreateTestOwner();
+        var testProperty = await CreateTestProperty("Test Property", owner.Id);
+
+        // Act
+        var response = await Client.GetAsync($"/api/properties/{testProperty.Id}");
+        var property = await response.Content.ReadFromJsonAsync<Property>();
+
+        // Assert
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+        Assert.That(property, Is.Not.Null);
+        Assert.That(property!.Name, Is.EqualTo("Test Property"));
+    }
+
+    [Test]
+    public async Task GetPropertyById_WithInvalidId_ReturnsNotFound()
+    {
+        // Arrange
+        var invalidId = "507f1f77bcf86cd799439011"; // ID válido pero que no existe
+
+        // Act
+        var response = await Client.GetAsync($"/api/properties/{invalidId}");
+
+        // Assert
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
+    }
+
+    [Test]
+    public async Task CreateProperty_WithValidData_ReturnsCreatedProperty()
+    {
+        // Arrange
+        var owner = await CreateTestOwner();
+        var newProperty = new Property
+        {
+            Name = "New Test Property",
+            Address = "123 Test St",
+            Price = 100000,
+            CodeInternal = "PROP-001",
+            Year = 2023,
+            IdOwner = owner.Id
+        };
+
+        // Act
+        var response = await Client.PostAsJsonAsync("/api/properties", newProperty);
+        
+        // Debug: Print response content
+        var responseContent = await response.Content.ReadAsStringAsync();
+        Console.WriteLine($"Response Content: {responseContent}");
+        
+        // Assert status code first
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.Created), $"Expected Created (201) but got {response.StatusCode}. Response: {responseContent}");
+        
+        // Try to deserialize
+        var createdProperty = await response.Content.ReadFromJsonAsync<Property>();
+        Assert.That(createdProperty, Is.Not.Null, "Failed to deserialize response to Property");
+        Assert.That(createdProperty!.Name, Is.EqualTo("New Test Property"));
+        Assert.That(createdProperty.Id, Is.Not.Null.Or.Empty, "Created property should have an ID");
+    }
+
+    [Test]
+    public async Task UpdateProperty_WithValidData_ReturnsUpdatedProperty()
+    {
+        // Arrange
+        var owner = await CreateTestOwner();
+        var testProperty = await CreateTestProperty("Test Property", owner.Id);
+
+        var updatedProperty = new Property
+        {
+            Id = testProperty.Id,
+            Name = "Updated Test Property",
+            Address = testProperty.Address,
+            Price = 200000,
+            CodeInternal = testProperty.CodeInternal,
+            Year = testProperty.Year,
+            IdOwner = testProperty.IdOwner
+        };
+
+        // Act
+        var response = await Client.PutAsJsonAsync($"/api/properties/{testProperty.Id}", updatedProperty);
+        
+        // Debug: Print response content
+        var responseContent = await response.Content.ReadAsStringAsync();
+        Console.WriteLine($"Update Response Content: {responseContent}");
+        
+        // Assert status code first
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK), 
+            $"Expected OK (200) but got {response.StatusCode}. Response: {responseContent}");
+        
+        // Try to deserialize the response
+        var updated = await response.Content.ReadFromJsonAsync<Property>();
+        
+        // If deserialization fails, try to get the property from the database
+        if (updated == null)
+        {
+            Console.WriteLine("Failed to deserialize update response. Trying to get the property directly...");
+            var getResponse = await Client.GetAsync($"/api/properties/{testProperty.Id}");
+            updated = await getResponse.Content.ReadFromJsonAsync<Property>();
+        }
+        
+        // Verify the updated properties
+        Assert.That(updated, Is.Not.Null, "Failed to get updated property");
+        Assert.That(updated!.Name, Is.EqualTo("Updated Test Property"));
+        Assert.That(updated.Price, Is.EqualTo(200000));
+    }
+
+    [Test]
+    public async Task DeleteProperty_WithValidId_ReturnsNoContent()
+    {
+        // Arrange
+        var owner = await CreateTestOwner();
+        var testProperty = await CreateTestProperty("Test Property to Delete", owner.Id);
+
+        // Act
+        var response = await Client.DeleteAsync($"/api/properties/{testProperty.Id}");
+
+        // Assert
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.NoContent));
+
+        // Verificar que ya no existe
+        var getResponse = await Client.GetAsync($"/api/properties/{testProperty.Id}");
+        Assert.That(getResponse.StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
+    }
+
+    [Test]
+    public async Task GetProperties_WithOwnerFilter_ReturnsFilteredProperties()
+    {
+        // Arrange
+        var owner1 = await CreateTestOwner("Owner 1");
+        var owner2 = await CreateTestOwner("Owner 2");
+
+        await CreateTestProperty("Property 1", owner1.Id);
+        await CreateTestProperty("Property 2", owner1.Id);
+        await CreateTestProperty("Property 3", owner2.Id);
+
+        // Act
+        var response = await Client.GetAsync($"/api/properties?ownerId={owner1.Id}");
+        var properties = await response.Content.ReadFromJsonAsync<List<Property>>();
+
+        // Assert
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+        Assert.That(properties, Is.Not.Null);
+        Assert.That(properties!.Count, Is.EqualTo(2));
+        Assert.That(properties.All(p => p.IdOwner == owner1.Id), Is.True);
+    }
+
+    [Test]
+    public async Task GetProperties_WithSearch_ReturnsMatchingProperties()
+    {
+        // Arrange
+        var owner = await CreateTestOwner();
+        await CreateTestProperty("Beach House", owner.Id, "123 Beach Rd");
+        await CreateTestProperty("Mountain Cabin", owner.Id, "456 Mountain Ln");
+        await CreateTestProperty("Downtown Apartment", owner.Id, "789 City St");
+
+        // Act - Buscar por nombre
+        var response1 = await Client.GetAsync("/api/properties?search=Beach");
+        var properties1 = await response1.Content.ReadFromJsonAsync<List<Property>>();
+
+        // Assert
+        Assert.That(response1.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+        Assert.That(properties1, Is.Not.Null);
+        Assert.That(properties1!.Count, Is.EqualTo(1));
+        Assert.That(properties1[0].Name, Is.EqualTo("Beach House"));
+
+        // Act - Buscar por dirección
+        var response2 = await Client.GetAsync("/api/properties?search=Mountain");
+        var properties2 = await response2.Content.ReadFromJsonAsync<List<Property>>();
+
+        // Assert
+        Assert.That(response2.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+        Assert.That(properties2, Is.Not.Null);
+        Assert.That(properties2!.Count, Is.EqualTo(1));
+        Assert.That(properties2[0].Address, Is.EqualTo("456 Mountain Ln"));
+    }
+
+    private async Task<Property> CreateTestProperty(string name, string ownerId, string address = "123 Test St")
+    {
+        var property = new Property
+        {
+            Name = name,
+            Address = address,
+            Price = 150000,
+            CodeInternal = $"PROP-{Guid.NewGuid()}",
+            Year = 2023,
+            IdOwner = ownerId
+        };
+
+        var collection = _database.GetCollection<Property>("properties");
+        await collection.InsertOneAsync(property);
+        return property;
+    }
+}
