@@ -1,3 +1,7 @@
+using TestAPI.Data;
+using TestAPI.Services;
+using TestAPI.Services.DAO;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -5,6 +9,19 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.Configure<RouteOptions>(options =>
+{
+    options.LowercaseUrls = true;
+    options.LowercaseQueryStrings = true; // opcional
+
+});
+// Configure MongoDB
+builder.Services.Configure<MongoDBSettings>(
+    builder.Configuration.GetSection("MongoDBSettings"));
+
+builder.Services.AddSingleton<MongoDBService>();
+
+builder.Services.AddScoped<OwnerService>();
 
 var app = builder.Build();
 
