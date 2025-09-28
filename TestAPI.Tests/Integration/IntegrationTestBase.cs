@@ -18,7 +18,7 @@ using TestAPI.Services.DAO;
 using TestAPI.Services.Interfaces;
 using TestAPI.Tests.Mocks;
 
-namespace TestAPI.Tests.IntegrationTests;
+namespace TestAPI.Tests.Integration;
 
 public abstract class IntegrationTestBase : IDisposable
 {

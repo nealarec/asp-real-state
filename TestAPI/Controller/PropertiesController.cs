@@ -105,7 +105,7 @@ public class PropertiesController : ResourceController<Property, PropertyService
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Update(string id, [FromBody] Property updatedProperty)
+    public async Task<ActionResult<Property>> Update(string id, [FromBody] Property updatedProperty)
     {
         return await base.UpdateAsync(id, updatedProperty);
     }

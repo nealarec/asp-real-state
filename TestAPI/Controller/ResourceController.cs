@@ -97,7 +97,7 @@ where T : class, IEntity
     /// <summary>
     /// Actualiza un recurso existente
     /// </summary>
-    protected virtual async Task<IActionResult> UpdateAsync(string id, T entity, Action<T>? beforeUpdate = null)
+    protected virtual async Task<ActionResult<T>> UpdateAsync(string id, T entity, Action<T>? beforeUpdate = null)
     {
         if (id != entity.Id)
             return BadRequest($"El ID de la ruta no coincide con el ID del {_resourceName}");
@@ -112,7 +112,9 @@ where T : class, IEntity
             if (!result)
                 return NotFound();
 
-            return NoContent();
+            // Get the updated entity to return it
+            var updatedEntity = await _service.GetAsync(id);
+            return Ok(updatedEntity);
         }
         catch (ValidationException ex)
         {

@@ -142,7 +142,7 @@ public class OwnersController : ResourceController<Owner, OwnerService>
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Update(string id, [FromBody] Owner updatedOwner)
+    public async Task<ActionResult<Owner>> Update(string id, [FromBody] Owner updatedOwner)
     {
         return await UpdateAsync(id, updatedOwner);
     }
