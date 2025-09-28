@@ -20,11 +20,11 @@ public class PropertyImage : IEntity
     [BsonRequired]
     [BsonRepresentation(BsonType.ObjectId)]
     [BsonElement("idProperty")]
-    public string IdProperty { get; set; }
+    public string IdProperty { get; set; } = string.Empty;
 
     [BsonRequired]
     [BsonElement("file")]
-    public string File { get; set; }
+    public string File { get; set; } = string.Empty;
 
     [BsonElement("thumbnail")]
     public string? Thumbnail { get; set; }

@@ -19,11 +19,11 @@ public class Property : IEntity
 
     [BsonRequired]
     [BsonElement("name")]
-    public string Name { get; set; }
+    public string Name { get; set; } = string.Empty;
 
     [BsonRequired]
     [BsonElement("address")]
-    public string Address { get; set; }
+    public string Address { get; set; } = string.Empty;
 
     [BsonRequired]
     [BsonElement("price")]
@@ -31,7 +31,7 @@ public class Property : IEntity
 
     [BsonRequired]
     [BsonElement("codeInternal")]
-    public string CodeInternal { get; set; }
+    public string CodeInternal { get; set; } = string.Empty;
 
     [BsonRequired]
     [BsonElement("year")]
@@ -40,5 +40,5 @@ public class Property : IEntity
     [BsonRequired]
     [BsonRepresentation(BsonType.ObjectId)]
     [BsonElement("idOwner")]
-    public string IdOwner { get; set; }
+    public string IdOwner { get; set; } = string.Empty;
 }

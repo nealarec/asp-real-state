@@ -19,7 +19,6 @@ public class PropertyImagesController : ResourceController<PropertyImage, Proper
     private readonly PropertyService _propertyService;
     private readonly IS3Service _s3Service;
     private const string BucketName = "property-images";
-    private bool _disposed = false;
 
     public PropertyImagesController(
         PropertyImageService imageService,
@@ -30,19 +29,6 @@ public class PropertyImagesController : ResourceController<PropertyImage, Proper
     {
         _propertyService = propertyService;
         _s3Service = s3Service;
-    }
-
-    protected override void Dispose(bool disposing)
-    {
-        if (disposing)
-        {
-            // Liberar recursos administrados
-            if (_s3Service is IDisposable disposable)
-            {
-                disposable.Dispose();
-            }
-        }
-        base.Dispose(disposing);
     }
 
     /// <summary>

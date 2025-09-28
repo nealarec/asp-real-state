@@ -9,8 +9,8 @@ namespace TestAPI.Controller;
 
 [ApiController]
 [Produces("application/json")]
-public abstract class ResourceController<T, TService> : ControllerBase, IDisposable
-    where T : class, IEntity
+public abstract class ResourceController<T, TService> : ControllerBase
+where T : class, IEntity
     where TService : BaseService<T>
 {
     protected readonly ILogger<ResourceController<T, TService>> _logger;
@@ -24,39 +24,6 @@ public abstract class ResourceController<T, TService> : ControllerBase, IDisposa
         _resourceName = resourceName;
     }
 
-    #region IDisposable Implementation
-
-    private bool _disposed = false;
-
-    protected virtual void Dispose(bool disposing)
-    {
-        if (!_disposed)
-        {
-            if (disposing)
-            {
-                // Liberar recursos administrados
-                if (_service is IDisposable disposable)
-                {
-                    disposable.Dispose();
-                }
-            }
-            // Liberar recursos no administrados
-            _disposed = true;
-        }
-    }
-
-    public void Dispose()
-    {
-        Dispose(true);
-        GC.SuppressFinalize(this);
-    }
-
-    ~ResourceController()
-    {
-        Dispose(false);
-    }
-
-    #endregion
 
     /// <summary>
     /// Obtiene todos los recursos con filtrado opcional
