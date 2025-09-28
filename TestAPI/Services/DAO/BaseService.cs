@@ -15,8 +15,12 @@ public abstract class BaseService<T> where T : class, IEntity
     public virtual async Task<List<T>> GetAsync() =>
         await _collection.Find(_ => true).ToListAsync();
 
-    public virtual async Task<T> GetAsync(string id) =>
-        await _collection.Find(x => x.Id == id).FirstOrDefaultAsync();
+    public virtual async Task<T> GetAsync(string id)
+    {
+        var entity = await _collection.Find(x => x.Id == id).FirstOrDefaultAsync();
+        if (entity == null) throw new KeyNotFoundException($"No se encontró una entidad con el ID {id}");
+        return entity;
+    }
 
     public virtual async Task<List<T>> GetAsync(FilterDefinition<T> filter) =>
         await _collection.Find(filter).ToListAsync();

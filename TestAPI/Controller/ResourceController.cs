@@ -56,11 +56,11 @@ where T : class, IEntity
         try
         {
             var item = await _service.GetAsync(id);
-            if (item is null)
-            {
-                return NotFound();
-            }
             return Ok(item);
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound($"No se encontró el {_resourceName} con ID: {id}");
         }
         catch (Exception ex)
         {

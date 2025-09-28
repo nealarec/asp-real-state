@@ -24,7 +24,6 @@ public class OwnerService : BaseService<Owner>
     public override async Task<List<Owner>> GetAsync()
     {
         var owners = await base.GetAsync();
-        _logger.LogInformation("Obteniendo todos los propietarios");
         foreach (var owner in owners) UpdatePhotoUrl(owner);
         return owners;
     }
@@ -39,14 +38,13 @@ public class OwnerService : BaseService<Owner>
     public override async Task<List<Owner>> GetAsync(FilterDefinition<Owner> filter)
     {
         var owners = await base.GetAsync(filter);
-        owners.Select(owner => UpdatePhotoUrl(owner));
+        foreach (var owner in owners) UpdatePhotoUrl(owner);
         return owners;
     }
 
 
     private Owner UpdatePhotoUrl(Owner owner)
     {
-        _logger.LogInformation("Actualizando URL de la foto de perfil para el propietario {OwnerId}", owner.Id);
         if (!string.IsNullOrEmpty(owner.Photo))
         {
             try

@@ -1,49 +1,73 @@
 using Amazon.S3;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using TestAPI.Data;
 using TestAPI.Services;
 using TestAPI.Services.DAO;
 using TestAPI.Services.Interfaces;
 using TestAPI.Models;
+using MongoDB.Driver;
 
-var builder = WebApplication.CreateBuilder(args);
+namespace TestAPI;
 
-// Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-builder.Services.Configure<RouteOptions>(options =>
+public class Program
 {
-    options.LowercaseUrls = true;
-    options.LowercaseQueryStrings = true; // opcional
+    public static void Main(string[] args)
+    {
+        var builder = WebApplication.CreateBuilder(args);
+        ConfigureServices(builder);
 
-});
-// Configure MongoDB
-builder.Services.Configure<MongoDBSettings>(
-    builder.Configuration.GetSection("MongoDBSettings"));
+        var app = builder.Build();
+        ConfigureMiddleware(app);
 
-builder.Services.AddSingleton<MongoDBService>();
+        app.Run();
+    }
 
-builder.Services.AddScoped<OwnerService>();
-builder.Services.AddScoped<PropertyService>();
-builder.Services.AddScoped<PropertyTraceService>();
-builder.Services.AddScoped<PropertyImageService>();
+    public static void ConfigureServices(WebApplicationBuilder builder)
+    {
+        // Add services to the container.
+        // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+        builder.Services.AddControllers();
+        builder.Services.AddEndpointsApiExplorer();
+        builder.Services.AddSwaggerGen();
+        builder.Services.Configure<RouteOptions>(options =>
+        {
+            options.LowercaseUrls = true;
+            options.LowercaseQueryStrings = true; // opcional
+        });
 
-// Configure S3
-builder.Services.Configure<S3Settings>(
-    builder.Configuration.GetSection("S3Settings"));
-builder.Services.AddScoped<IS3Service, S3Service>();
+        // Configure MongoDB
+        builder.Services.Configure<Data.MongoDBSettings>(
+            builder.Configuration.GetSection("MongoDBSettings"));
 
-var app = builder.Build();
+        builder.Services.AddSingleton<Services.MongoDBService>();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
+        builder.Services.AddScoped<Services.DAO.OwnerService>();
+        builder.Services.AddScoped<Services.DAO.PropertyService>();
+        builder.Services.AddScoped<Services.DAO.PropertyTraceService>();
+        builder.Services.AddScoped<Services.DAO.PropertyImageService>();
+
+        // Configure S3
+        builder.Services.Configure<Models.S3Settings>(
+            builder.Configuration.GetSection("S3Settings"));
+        builder.Services.AddScoped<Services.Interfaces.IS3Service, Services.S3Service>();
+    }
+
+    public static void ConfigureMiddleware(WebApplication app)
+    {
+        // Configure the HTTP request pipeline.
+        if (app.Environment.IsDevelopment())
+        {
+            app.UseSwagger();
+            app.UseSwaggerUI();
+        }
+        else
+        {
+            // Solo usar redirección HTTPS en producción
+            app.UseHttpsRedirection();
+        }
+
+        app.MapControllers();
+    }
 }
-
-app.UseHttpsRedirection();
-app.MapControllers();
-app.Run();
-
