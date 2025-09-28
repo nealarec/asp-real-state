@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const ownerSchema = z.object({
-  _id: z.string().optional(),
+  id: z.string().optional(),
   idOwner: z.string().optional(),
   name: z.string().min(1, "El nombre es requerido"),
   address: z.string().min(1, "La dirección es requerida"),

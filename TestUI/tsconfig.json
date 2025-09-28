@@ -6,6 +6,7 @@
     "lib": ["DOM", "DOM.Iterable", "ESNext"],
     "module": "ESNext",
     "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"]
@@ -29,9 +30,6 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "verbatimModuleSyntax": true,
-
-    /* JSX */
-    "jsx": "react-jsx",
     "jsxImportSource": "react",
 
     /* Type Checking */
@@ -39,8 +37,6 @@
 
     /* Other Options */
     "useDefineForClassFields": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
     "noEmit": true,
     "moduleDetection": "force"
   },
