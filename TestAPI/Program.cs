@@ -22,6 +22,7 @@ builder.Services.Configure<MongoDBSettings>(
 builder.Services.AddSingleton<MongoDBService>();
 
 builder.Services.AddScoped<OwnerService>();
+builder.Services.AddScoped<PropertyService>();
 
 var app = builder.Build();
 
