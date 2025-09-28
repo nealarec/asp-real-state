@@ -199,4 +199,47 @@ public class OwnersControllerTests : IntegrationTestBase
         // Assert
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
     }
+
+    [Test]
+    public async Task GetOwnerProperties_WithValidOwnerId_ReturnsProperties()
+    {
+        // Arrange
+        // Crear un propietario
+        var owner = await CreateTestOwner("Propietario de Prueba");
+        
+        // Crear propiedades asociadas al propietario
+        var property1 = await CreateTestProperty("Propiedad 1", "Calle 123", owner.Id);
+        var property2 = await CreateTestProperty("Propiedad 2", "Avenida 456", owner.Id);
+        
+        // Crear una propiedad que no pertenece al propietario
+        var otherOwner = await CreateTestOwner("Otro Propietario");
+        await CreateTestProperty("Otra Propiedad", "Calle 789", otherOwner.Id);
+
+        // Act
+        var response = await Client.GetAsync($"/api/owners/{owner.Id}/properties");
+        var properties = await response.Content.ReadFromJsonAsync<Property[]>();
+
+        // Assert
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+        Assert.That(properties, Is.Not.Null);
+        Assert.That(properties, Has.Length.EqualTo(2));
+        Assert.That(properties.Any(p => p.Id == property1.Id), Is.True);
+        Assert.That(properties.Any(p => p.Id == property2.Id), Is.True);
+    }
+
+    [Test]
+    public async Task GetOwnerProperties_WithNonExistentOwnerId_ReturnsEmptyList()
+    {
+        // Arrange
+        var nonExistentId = "507f1f77bcf86cd799439011"; // ID de MongoDB válido pero que no existe
+
+        // Act
+        var response = await Client.GetAsync($"/api/owners/{nonExistentId}/properties");
+        var properties = await response.Content.ReadFromJsonAsync<Property[]>();
+
+        // Assert
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+        Assert.That(properties, Is.Not.Null);
+        Assert.That(properties, Is.Empty);
+    }
 }

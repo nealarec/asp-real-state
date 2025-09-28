@@ -11,15 +11,18 @@ namespace TestAPI.Controller;
 public class OwnersController : ResourceController<Owner, OwnerService>
 {
     private readonly IS3Service _s3Service;
+    private readonly PropertyService _propertyService;
     private const string BucketName = "owner-images";
 
     public OwnersController(
         OwnerService ownerService,
+        PropertyService propertyService,
         ILogger<OwnersController> logger,
         IS3Service s3Service)
         : base(ownerService, logger, "propietario")
     {
         _s3Service = s3Service;
+        _propertyService = propertyService;
     }
 
     /// <summary>
@@ -47,6 +50,21 @@ public class OwnersController : ResourceController<Owner, OwnerService>
     public async Task<ActionResult<Owner>> GetById(string id)
     {
         return await GetByIdAsync(id);
+    }
+
+    /// <summary>
+    /// Obtiene las propiedades de un propietario
+    /// </summary>
+    /// <param name="id">ID del propietario</param>
+    [HttpGet("{id:length(24)}/properties")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<Property>))]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<IEnumerable<Property>>> GetProperties(string id)
+    {
+
+        var owner = await _service.GetAsync(id);
+        if (owner is null) return NotFound($"No se encontró un propietario con ID: {id}");
+        return Ok(await _propertyService.GetAsync(Builders<Property>.Filter.Eq("IdOwner", owner.Id)));
     }
 
 

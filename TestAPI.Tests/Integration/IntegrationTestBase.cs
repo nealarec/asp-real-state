@@ -134,6 +134,21 @@ public abstract class IntegrationTestBase : IDisposable
         return owner;
     }
 
+    protected async Task<Property> CreateTestProperty(string name = "Test Property", string address = "456 Test Ave", string ownerId = null)
+    {
+        var property = new Property
+        {
+            Name = name,
+            Address = address,
+            Price = 250000,
+            Year = DateTime.UtcNow.Year,
+            IdOwner = ownerId
+        };
+        var collection = _database.GetCollection<Property>("properties");
+        await collection.InsertOneAsync(property);
+        return property;
+    }
+
     protected virtual void Dispose(bool disposing)
     {
         if (disposing)
