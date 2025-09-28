@@ -13,6 +13,7 @@ export const propertySchema = z.object({
     .min(1800, "El año debe ser válido")
     .max(new Date().getFullYear() + 1, "El año no puede ser en el futuro"),
   idOwner: z.string().min(1, "El ID del propietario es requerido"),
+  coverImageUrl: z.string().optional(),
 });
 
 export type Property = z.infer<typeof propertySchema>;

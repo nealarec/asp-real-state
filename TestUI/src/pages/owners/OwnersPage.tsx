@@ -34,8 +34,13 @@ export default function OwnersPage() {
             to={`/propietarios/${owner.id}`}
             className="p-4 border rounded-lg shadow-sm hover:shadow-md transition-shadow bg-white"
           >
-            <h2 className="text-lg font-semibold">{owner.name}</h2>
-            <p className="text-gray-600">{owner.address}</p>
+            <div className="flex items-center mb-2">
+              <img src={owner.photo} alt={owner.name} className="w-24 h-24 rounded-full mb-2" />
+              <div className="ml-4">
+                <h2 className="text-lg font-semibold">{owner.name}</h2>
+                <p className="text-gray-600">{owner.address}</p>
+              </div>
+            </div>
           </Link>
         ))}
       </div>

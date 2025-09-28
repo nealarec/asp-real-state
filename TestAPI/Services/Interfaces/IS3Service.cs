@@ -5,6 +5,9 @@ namespace TestAPI.Services.Interfaces;
 
 public interface IS3Service
 {
+    string PropertyImageBucketName { get; }
+    string OwnerImageBucketName { get; }
+
     Task<FileUploadResult> UploadFileAsync(IFormFile file, string bucketName, string? prefix = null);
     Task<Stream> GetFileAsync(string fileName, string bucketName);
     Task<bool> DeleteFileAsync(string fileName, string bucketName);

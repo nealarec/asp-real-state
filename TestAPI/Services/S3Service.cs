@@ -13,6 +13,9 @@ namespace TestAPI.Services;
 
 public class S3Service : IS3Service
 {
+    public string PropertyImageBucketName { get; } = "property-images";
+    public string OwnerImageBucketName { get; } = "owner-images";
+
     private readonly IAmazonS3 _s3Client;
     private readonly string _serviceUrl;
     private readonly ILogger<S3Service> _logger;
@@ -52,7 +55,7 @@ public class S3Service : IS3Service
         }
 
         // Si el fileName ya es una URL completa, devolverla directamente
-        if (Uri.TryCreate(fileName, UriKind.Absolute, out var uriResult) 
+        if (Uri.TryCreate(fileName, UriKind.Absolute, out var uriResult)
             && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps))
         {
             _logger.LogInformation("El archivo ya es una URL completa: {Url}", fileName);
@@ -70,7 +73,7 @@ public class S3Service : IS3Service
 
             // Si el archivo no existe, GetObjectMetadataAsync lanzará una excepción
             var metadata = _s3Client.GetObjectMetadataAsync(metadataRequest).GetAwaiter().GetResult();
-            
+
             // Si llegamos aquí, el archivo existe, proceder a generar la URL firmada
             var request = new GetPreSignedUrlRequest
             {

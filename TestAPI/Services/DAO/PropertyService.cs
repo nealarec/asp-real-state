@@ -1,17 +1,29 @@
 using System.ComponentModel.DataAnnotations;
 using MongoDB.Driver;
 using TestAPI.Model;
+using TestAPI.Services.Interfaces;
 
 namespace TestAPI.Services.DAO;
 
 public class PropertyService : BaseService<Property>
 {
     private readonly OwnerService _ownerService;
+    private readonly PropertyImageService _imgService;
+    private readonly IS3Service _s3Service;
+    private readonly ILogger<PropertyService> _logger;
 
-    public PropertyService(MongoDBService mongoDB, OwnerService ownerService)
+    public PropertyService(
+        MongoDBService mongoDB,
+        OwnerService ownerService,
+        PropertyImageService propertyImageService,
+        IS3Service s3Service,
+        ILogger<PropertyService> logger)
         : base(mongoDB.GetCollection<Property>("properties"))
     {
         _ownerService = ownerService;
+        _imgService = propertyImageService;
+        _s3Service = s3Service;
+        _logger = logger;
 
         // Crear índices para búsquedas comunes
         var nameIndexKeys = Builders<Property>.IndexKeys.Ascending(x => x.Name);
@@ -23,32 +35,87 @@ public class PropertyService : BaseService<Property>
         _collection.Indexes.CreateOne(new CreateIndexModel<Property>(priceIndexKeys));
     }
 
-
-    public async Task<Owner> GetOwnerAsync(string id)
+    public override async Task<List<Property>> GetAsync()
     {
-        var property = await GetAsync(id);
-        return await _ownerService.GetAsync(property.IdOwner);
-    }
+        var props = await base.GetAsync();
 
-    public override async Task<Property> CreateAsync(Property property)
-    {
-        if (property == null)
-            throw new ArgumentNullException(nameof(property));
-
-        // Verificar que el propietario exista
-        var owner = await _ownerService.GetAsync(property.IdOwner);
-        if (owner == null)
+        // Procesar cada propiedad para agregar la URL de la imagen de portada
+        foreach (var property in props)
         {
-            throw new ValidationException($"No existe un propietario con el ID: {property.IdOwner}");
+            try
+            {
+                property.CoverImageUrl = await GetCoverImageAsync(property.Id);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener la imagen de portada para la propiedad {PropertyId}", property.Id);
+                property.CoverImageUrl = string.Empty;
+            }
         }
 
-        // Validar campos requeridos
-        if (string.IsNullOrWhiteSpace(property.Name))
-            throw new ValidationException("El nombre de la propiedad es requerido");
+        return props;
+    }
 
-        if (string.IsNullOrWhiteSpace(property.Address))
-            throw new ValidationException("La dirección de la propiedad es requerida");
+    public override async Task<List<Property>> GetAsync(FilterDefinition<Property> filter = null)
+    {
+        var props = await base.GetAsync(filter);
 
-        return await base.CreateAsync(property);
+        // Procesar cada propiedad para agregar la URL de la imagen de portada
+        foreach (var property in props)
+        {
+            try
+            {
+                property.CoverImageUrl = await GetCoverImageAsync(property.Id);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener la imagen de portada para la propiedad {PropertyId}", property.Id);
+                property.CoverImageUrl = string.Empty;
+            }
+        }
+
+        return props;
+    }
+
+
+    public override async Task<Property> GetAsync(string id)
+    {
+        var property = await base.GetAsync(id);
+        property.CoverImageUrl = await GetCoverImageAsync(property.Id);
+        return property;
+    }
+
+    public async Task<Owner?> GetOwnerAsync(string id)
+    {
+        try
+        {
+            var property = await GetAsync(id);
+            return await _ownerService.GetAsync(property.IdOwner);
+        }
+        catch (KeyNotFoundException)
+        {
+            return null;
+        }
+    }
+
+    public async Task<string> GetCoverImageAsync(string id)
+    {
+        try
+        {
+            var filter = Builders<PropertyImage>.Filter.Eq(x => x.IdProperty, id);
+            var images = await _imgService.GetAsync(filter);
+            var image = images.FirstOrDefault();
+
+            if (image == null || string.IsNullOrEmpty(image.File))
+            {
+                return string.Empty;
+            }
+
+            return _s3Service.GetPublicFileUrl(image.File, _s3Service.PropertyImageBucketName);
+        }
+        catch
+        {
+            return string.Empty;
+        }
     }
 }

@@ -41,4 +41,8 @@ public class Property : IEntity
     [BsonRepresentation(BsonType.ObjectId)]
     [BsonElement("idOwner")]
     public string IdOwner { get; set; } = string.Empty;
+
+    [BsonIgnore]
+    [JsonPropertyName("coverImageUrl")]
+    public string? CoverImageUrl { get; set; } = "";
 }
