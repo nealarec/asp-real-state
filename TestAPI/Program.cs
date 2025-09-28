@@ -1,6 +1,9 @@
+using Amazon.S3;
 using TestAPI.Data;
 using TestAPI.Services;
 using TestAPI.Services.DAO;
+using TestAPI.Services.Interfaces;
+using TestAPI.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,6 +26,13 @@ builder.Services.AddSingleton<MongoDBService>();
 
 builder.Services.AddScoped<OwnerService>();
 builder.Services.AddScoped<PropertyService>();
+builder.Services.AddScoped<PropertyTraceService>();
+builder.Services.AddScoped<PropertyImageService>();
+
+// Configure S3
+builder.Services.Configure<S3Settings>(
+    builder.Configuration.GetSection("S3Settings"));
+builder.Services.AddScoped<IS3Service, S3Service>();
 
 var app = builder.Build();
 
