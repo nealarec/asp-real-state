@@ -1,65 +1,61 @@
-import { useController, type UseControllerProps, type FieldValues, type Path, type PathValue } from 'react-hook-form';
-import { type ComponentProps, useState, type ChangeEvent } from 'react';
+import { useController } from 'react-hook-form';
+import type { FieldValues, Path, RegisterOptions, Control } from 'react-hook-form';
+import { type ComponentProps, type ChangeEvent } from 'react';
+
+type FileInputRules<T extends FieldValues> = Omit<
+  RegisterOptions<T, Path<T>>, 
+  'valueAsNumber' | 'valueAsDate' | 'setValueAs' | 'disabled'
+> & {
+  required?: string | { value: boolean; message: string } | boolean;
+};
 
 type FileInputProps<T extends FieldValues> = Omit<ComponentProps<'input'>, 'defaultValue' | 'name' | 'onChange' | 'value'> & {
   label?: string;
   error?: string;
   containerClassName?: string;
-  previewUrl?: string | null;
-  onFileChange?: (file: File | null) => void;
   name: Path<T>;
-  control?: UseControllerProps<T>['control'];
-  rules?: {
-    required?: string | { value: boolean; message: string };
-    [key: string]: any;
-  };
-  defaultValue?: PathValue<T, Path<T>>;
+  control: Control<T>;
+  rules?: FileInputRules<T>;
+  accept?: string;
+  multiple?: boolean;
 };
 
 export function FileInput<T extends FieldValues>({
   name,
   control,
   rules,
-  defaultValue,
   label,
   error,
   containerClassName = '',
   className = '',
   accept = 'image/*',
-  previewUrl: initialPreviewUrl,
-  onFileChange,
+  multiple = false,
   ...props
 }: FileInputProps<T>) {
-  const [previewUrl, setPreviewUrl] = useState<string | null>(initialPreviewUrl || null);
-  
   const {
-    field: { onChange, value, ref, ...field },
+    field: { onChange, ref, ...field },
     fieldState: { error: fieldError },
   } = useController<T>({
     name,
     control,
-    rules,
-    defaultValue,
-  } as UseControllerProps<T>);
+    rules: rules as any, // Type assertion to handle the custom required type
+  });
 
   const errorMessage = error || fieldError?.message;
-  const fileInputId = props.id || `file-input-${name}`;
+  const fileInputId = `file-input-${name}`;
+  const isRequired = rules?.required !== undefined && rules.required !== false;
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] || null;
+    const files = e.target.files;
     
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreviewUrl(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    } else {
-      setPreviewUrl(initialPreviewUrl || null);
+    // This is for react-hook-form
+    if (files) {
+      const dataTransfer = new DataTransfer();
+      Array.from(files).forEach(file => dataTransfer.items.add(file));
+      e.target.files = dataTransfer.files;
     }
-
-    onChange(file);
-    if (onFileChange) onFileChange(file);
+    
+    onChange(e);
   };
 
   return (
@@ -67,45 +63,27 @@ export function FileInput<T extends FieldValues>({
       {label && (
         <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor={fileInputId}>
           {label}
-          {(typeof rules?.required === 'string' || rules?.required?.value) && (
+          {isRequired && (
             <span className="text-red-500 ml-1">*</span>
           )}
         </label>
       )}
-
       <div className="mt-1 flex items-center">
-        <label
-          htmlFor={fileInputId}
-          className="cursor-pointer bg-white py-2 px-3 border border-gray-300 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-        >
-          {value ? 'Cambiar archivo' : 'Seleccionar archivo'}
-        </label>
         <input
           id={fileInputId}
-          ref={ref}
           type="file"
-          className="sr-only"
+          ref={ref}
           accept={accept}
+          multiple={multiple}
           onChange={handleFileChange}
+          className={`block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 ${className}`}
           {...field}
           {...props}
         />
-        <span className="ml-2 text-sm text-gray-500">
-          {value?.name || "Ningún archivo seleccionado"}
-        </span>
       </div>
-
-      {previewUrl && (
-        <div className="mt-2">
-          <img
-            src={previewUrl}
-            alt="Vista previa"
-            className="h-32 w-32 object-cover rounded-md"
-          />
-        </div>
+      {errorMessage && (
+        <p className="mt-1 text-sm text-red-600">{errorMessage}</p>
       )}
-
-      {errorMessage && <p className="mt-1 text-sm text-red-600">{errorMessage}</p>}
     </div>
   );
 }

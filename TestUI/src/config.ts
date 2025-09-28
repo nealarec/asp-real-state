@@ -2,9 +2,9 @@
 export const config = {
   // URL base de la API
   api: {
-    baseUrl: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api',
+    baseUrl: import.meta.env["VITE_API_BASE_URL"] || "http://localhost:5000/api",
     endpoints: {
-      properties: '/properties',
+      properties: "/properties",
       propertyImages: (propertyId: string) => `/properties/${propertyId}/images`,
       uploadImage: (propertyId: string) => `/properties/${propertyId}/images/upload`,
     },
@@ -19,6 +19,6 @@ export const config = {
   // Configuración de imágenes
   images: {
     maxSize: 5 * 1024 * 1024, // 5MB
-    allowedTypes: ['image/jpeg', 'image/png', 'image/webp'],
+    allowedTypes: ["image/jpeg", "image/png", "image/webp"],
   },
 };

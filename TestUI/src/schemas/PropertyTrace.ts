@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const propertyTraceSchema = z.object({
-  id: z.string().optional(),
+  id: z.string(),
   idPropertyTrace: z.string().optional(),
   idProperty: z.string().min(1, "El ID de la propiedad es requerido"),
   dateSale: z.string().or(z.date()).pipe(z.coerce.date()),

@@ -1,8 +1,7 @@
 import { z } from "zod";
 
-export const propertySchema = z.object({
-  id: z.string().optional(),
-  idProperty: z.string().optional(),
+export const propertyFormSchema = z.object({
+  id: z.string().readonly().optional(),
   name: z.string().min(1, "El nombre es requerido"),
   address: z.string().min(1, "La dirección es requerida"),
   price: z.number().min(0, "El precio debe ser mayor o igual a 0"),
@@ -14,6 +13,10 @@ export const propertySchema = z.object({
     .max(new Date().getFullYear() + 1, "El año no puede ser en el futuro"),
   idOwner: z.string().min(1, "El ID del propietario es requerido"),
   coverImageUrl: z.string().optional(),
+});
+
+export const propertySchema = propertyFormSchema.extend({
+  id: z.string(),
 });
 
 export type Property = z.infer<typeof propertySchema>;

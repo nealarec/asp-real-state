@@ -1,6 +1,8 @@
 import type { Property } from "@/schemas/Property";
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
+import placeholderImage from "@/assets/house-placeholder.svg";
 
 export default function PropertyDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -13,6 +15,8 @@ export default function PropertyDetailPage() {
     queryKey: ["property", id],
     queryFn: () => fetch(`/api/properties/${id}`).then(res => res.json()),
   });
+
+  const [showPlaceholder, setShowPlaceholder] = useState(!property?.coverImageUrl);
 
   if (isLoading) return <div>Cargando propiedad...</div>;
   if (error) return <div>Error al cargar la propiedad</div>;
@@ -38,9 +42,10 @@ export default function PropertyDetailPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <img
-              src={"https://via.placeholder.com/600x400"}
+              src={showPlaceholder ? placeholderImage : property.coverImageUrl}
               alt={property.name}
-              className="w-full h-auto rounded-lg"
+              className="w-full h-auto rounded-lg bg-gray-200"
+              onError={() => setShowPlaceholder(true)}
             />
           </div>
 

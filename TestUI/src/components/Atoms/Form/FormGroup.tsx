@@ -3,7 +3,7 @@ import { type ReactNode } from "react";
 interface FormGroupProps {
   children: ReactNode;
   className?: string;
-  error?: string;
+  error?: string | null | undefined;
   label?: string;
   htmlFor?: string;
   required?: boolean;

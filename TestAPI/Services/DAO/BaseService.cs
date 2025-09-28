@@ -34,7 +34,7 @@ public abstract class BaseService<T> where T : class, IEntity
     public virtual async Task<bool> UpdateAsync(string id, T entity)
     {
         var result = await _collection.ReplaceOneAsync(x => x.Id == id, entity, new ReplaceOptions { IsUpsert = false });
-        return result.IsAcknowledged && result.ModifiedCount > 0;
+        return result.IsAcknowledged && result.MatchedCount > 0;
     }
 
     public virtual async Task<bool> DeleteAsync(string id)
