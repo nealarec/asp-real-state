@@ -11,6 +11,7 @@ module.exports = {
     'plugin:react-hooks/recommended',
     'plugin:@typescript-eslint/recommended',
     'plugin:react/jsx-runtime',
+    'plugin:prettier/recommended',
   ],
   parser: '@typescript-eslint/parser',
   parserOptions: {
@@ -20,14 +21,12 @@ module.exports = {
     ecmaVersion: 'latest',
     sourceType: 'module',
   },
-  plugins: ['react', 'react-refresh', '@typescript-eslint'],
+  plugins: ['react', 'react-refresh', '@typescript-eslint', 'prettier'],
   rules: {
-    'react-refresh/only-export-components': [
-      'warn',
-      { allowConstantExport: true },
-    ],
-    'react/prop-types': 'off', // Not needed with TypeScript
-    'react/react-in-jsx-scope': 'off', // Not needed with new JSX transform
+    'prettier/prettier': 'warn',
+    'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
+    'react/prop-types': 'off',
+    'react/react-in-jsx-scope': 'off',
     '@typescript-eslint/explicit-function-return-type': 'off',
     '@typescript-eslint/explicit-module-boundary-types': 'off',
     '@typescript-eslint/no-explicit-any': 'warn',
@@ -37,6 +36,11 @@ module.exports = {
   settings: {
     react: {
       version: 'detect',
+    },
+    'import/resolver': {
+      node: {
+        extensions: ['.js', '.jsx', '.ts', '.tsx'],
+      },
     },
   },
 };
