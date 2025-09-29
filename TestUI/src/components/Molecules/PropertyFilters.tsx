@@ -5,7 +5,7 @@ import { OwnerSelect } from "@/components/Molecules/OwnerSelect";
 import Input from "@/components/Atoms/Form/Input";
 import { Button } from "@/components/Atoms/Button";
 import { Slider } from "@/components/Atoms/Form/Slider";
-import { FaFilter, FaTimes } from "react-icons/fa";
+import { FaFilter, FaSearch, FaTimes } from "react-icons/fa";
 import { useIsMobile } from "@/hooks/useIsMobile";
 
 interface PropertyFiltersProps {
@@ -81,53 +81,69 @@ export function PropertyFilters({
       search: "",
       ownerId: "",
       minPrice: minPrice,
+      maxPrice: maxPrice,
       minYear: minYear,
       maxYear: maxYear,
+      codeInternal: "",
     });
   };
 
-  const hasActiveFilters = Object.entries(watch()).some(([key, value]) => key !== "search" && value !== "");
+  const hasActiveFilters = Object.entries(watch()).some(
+    ([key, value]) => key !== "search" && value !== ""
+  );
 
   const renderDesktopFilters = () => (
     <div className="space-y-4">
       <div className="flex items-center gap-4">
-        <div className="flex-1">
+        <div className="flex-1 space-y-1">
           <Controller
             name="search"
             control={control}
             render={({ field }) => (
-              <Input
-                {...field}
-                type="text"
-                placeholder="Search properties..."
-                className="w-full"
-              />
+              <div className="relative flex-1">
+                <FaSearch className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                <Input
+                  type="text"
+                  placeholder="Search owners by name..."
+                  className="pl-10 pr-10 p-3 w-full"
+                  containerClassName=""
+                  {...field}
+                />
+                {field.value && (
+                  <FaTimes
+                    className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 cursor-pointer hover:text-gray-600"
+                    onClick={handleReset}
+                  />
+                )}
+              </div>
             )}
           />
         </div>
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => setShowFilters(!showFilters)}
-          className="flex items-center gap-2 whitespace-nowrap"
-        >
-          {showFilters ? (
-            <>
-              <FaTimes className="h-4 w-4" />
-              <span>Hide Filters</span>
-            </>
-          ) : (
-            <>
-              <FaFilter className="h-4 w-4" />
-              <span>Filters</span>
-            </>
-          )}
-          {hasActiveFilters && (
-            <span className="ml-1 inline-flex items-center justify-center h-5 w-5 rounded-full bg-blue-100 text-blue-600 text-xs">
-              !
-            </span>
-          )}
-        </Button>
+        <div>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setShowFilters(!showFilters)}
+            className="flex items-center gap-2 whitespace-nowrap"
+          >
+            {showFilters ? (
+              <>
+                <FaTimes className="h-4 w-4" />
+                <span>Hide Filters</span>
+              </>
+            ) : (
+              <>
+                <FaFilter className="h-4 w-4" />
+                <span>Filters</span>
+              </>
+            )}
+            {hasActiveFilters && (
+              <span className="ml-1 inline-flex items-center justify-center h-5 w-5 rounded-full bg-blue-100 text-blue-600 text-xs">
+                !
+              </span>
+            )}
+          </Button>
+        </div>
       </div>
       {showFilters && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200 animate-in fade-in">
@@ -155,7 +171,7 @@ export function PropertyFilters({
                     step={1000}
                     value={[field.value, watch("maxPrice")]}
                     onValueChange={([min, max]) => {
-                      if (typeof min === 'number' && typeof max === 'number') {
+                      if (typeof min === "number" && typeof max === "number") {
                         setValue("minPrice", min);
                         setValue("maxPrice", max);
                       }
@@ -184,7 +200,7 @@ export function PropertyFilters({
                     step={1}
                     value={[field.value, watch("maxYear")]}
                     onValueChange={([min, max]) => {
-                      if (typeof min === 'number' && typeof max === 'number') {
+                      if (typeof min === "number" && typeof max === "number") {
                         setValue("minYear", min);
                         setValue("maxYear", max);
                       }
@@ -213,17 +229,20 @@ export function PropertyFilters({
   const renderMobileFilters = () => (
     <div className="space-y-4">
       <div className="flex items-center gap-4">
-        <div className="flex-1">
+        <div className="flex-1 space-y-1">
+          <label className="block text-sm font-medium text-gray-700">Search</label>
           <Controller
             name="search"
             control={control}
             render={({ field }) => (
-              <Input
-                {...field}
-                type="text"
-                placeholder="Search properties..."
-                className="w-full"
-              />
+              <div className="relative">
+                <Input
+                  {...field}
+                  type="text"
+                  placeholder="Search properties..."
+                  className="w-full bg-white"
+                />
+              </div>
             )}
           />
         </div>
@@ -251,7 +270,7 @@ export function PropertyFilters({
           )}
         </Button>
       </div>
-      
+
       {showFilters && (
         <div className="space-y-4 p-4 bg-gray-50 rounded-lg border border-gray-200 animate-in fade-in">
           <div className="space-y-1">
@@ -278,7 +297,7 @@ export function PropertyFilters({
                     step={1000}
                     value={[field.value, watch("maxPrice")]}
                     onValueChange={([min, max]) => {
-                      if (typeof min === 'number' && typeof max === 'number') {
+                      if (typeof min === "number" && typeof max === "number") {
                         setValue("minPrice", min);
                         setValue("maxPrice", max);
                       }
@@ -307,7 +326,7 @@ export function PropertyFilters({
                     step={1}
                     value={[field.value, watch("maxYear")]}
                     onValueChange={([min, max]) => {
-                      if (typeof min === 'number' && typeof max === 'number') {
+                      if (typeof min === "number" && typeof max === "number") {
                         setValue("minYear", min);
                         setValue("maxYear", max);
                       }

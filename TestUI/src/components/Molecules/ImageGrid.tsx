@@ -1,5 +1,5 @@
 import React from "react";
-import { ImageThumbnail } from "../../Atoms/Image/ImageThumbnail";
+import { ImageThumbnail } from "@/components/Atoms/Image/ImageThumbnail";
 import { ImageActions } from "./ImageActions";
 
 type ImageItem = {

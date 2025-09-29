@@ -3,8 +3,8 @@ import { useState, useCallback } from "react";
 import { useProperties } from "@/hooks/useProperties";
 import PropertyCard, { PropertyListSkeleton } from "@/components/Molecules/PropertyCard";
 import { Pagination } from "@/components/Organisms/Pagination";
-import { PropertyFilters, MIN_YEAR, MAX_YEAR, MIN_PRICE, MAX_PRICE } from "@/components/Molecules/PropertyFilters/PropertyFilters";
-import type { PropertyFilters as PropertyFiltersType } from "@/components/Molecules/PropertyFilters/PropertyFilters";
+import { PropertyFilters, MIN_YEAR, MAX_YEAR, MIN_PRICE, MAX_PRICE } from "@/components/Molecules/PropertyFilters";
+import type { PropertyFilters as PropertyFiltersType } from "@/components/Molecules/PropertyFilters";
 
 export default function PropertiesPage() {
   const [page, setPage] = useState(1);

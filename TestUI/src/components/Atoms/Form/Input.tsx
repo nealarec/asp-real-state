@@ -8,11 +8,11 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 }
 
 const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ label, error, className = "", containerClassName = "", ...props }, ref) => {
+  ({ label, error, className = "", containerClassName = "mb-4", ...props }, ref) => {
     const inputId = props.id || props.name || `input-${Math.random().toString(36).substr(2, 9)}`;
 
     return (
-      <div className={`mb-4 ${containerClassName}`}>
+      <div className={`${containerClassName}`}>
         {label && (
           <label htmlFor={inputId} className="block text-sm font-medium text-gray-700 mb-1">
             {label}
