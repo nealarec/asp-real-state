@@ -3,13 +3,16 @@ import placeholderImage from "@/assets/house-placeholder.svg";
 import { PropertyImageGallery } from "@/components/Molecules/PropertyImageGallery";
 import { usePropertyImages } from "@/hooks/usePropertyImages";
 import { useProperties } from "@/hooks/useProperties";
+import { useOwners } from "@/hooks/useOwners";
+import type { Owner } from "@/schemas/Owner";
 
 export default function PropertyDetailPage() {
   const { id = "" } = useParams<{ id: string }>();
 
   const { data: property, isLoading, error } = useProperties().getProperty(id);
-
   const { data: images = [], isLoading: isLoadingImages } = usePropertyImages(id);
+  const { data: owner, isLoading: isLoadingOwner } = useOwners().getOwner(property?.idOwner || "");
+
   if (isLoading) return <div className="p-4">Loading property...</div>;
   if (error) return <div className="p-4">Error loading property</div>;
   if (!property) return <div className="p-4">Property not found</div>;
@@ -28,10 +31,31 @@ export default function PropertyDetailPage() {
           <div>
             <h1 className="text-2xl font-bold">{property.name}</h1>
             <p className="text-gray-600">{property.address}</p>
+
+            {isLoadingOwner && (
+              <div className="mt-2 text-sm text-gray-500">Loading owner info...</div>
+            )}
           </div>
-          <span className="text-xl font-semibold text-green-700">
-            ${property.price.toLocaleString()}
-          </span>
+
+          <div className="flex gap-4 justify-end">
+            <Link
+              to={`/properties/edit/${property.id}`}
+              className="bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600 transition-colors"
+            >
+              Edit
+            </Link>
+            <button
+              className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors"
+              onClick={() => {
+                // Lógica para eliminar
+                if (confirm("Are you sure you want to delete this property?")) {
+                  // Llamada a la API para eliminar
+                }
+              }}
+            >
+              Delete
+            </button>
+          </div>
         </div>
 
         {/* Main Content */}
@@ -54,13 +78,17 @@ export default function PropertyDetailPage() {
           </div>
 
           <div>
+            <span className="text-xl font-semibold text-green-700">
+              ${property.price.toLocaleString()}
+            </span>
             <div className="mb-6">
               <h2 className="text-lg font-semibold mb-2">Description</h2>
-              <p className="text-gray-700">{property.name || "No description available."}</p>
+              <p className="text-gray-700 md:min-h-[100px]">
+                {property.name || "No description available."}
+              </p>
             </div>
-
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              <div>
+            <div className="flex flex-col sm:flex-row gap-4 mb-6">
+              <div className="w-full sm:w-1/3">
                 <h3 className="text-sm font-medium text-gray-500">Year</h3>
                 <p>{property.year}</p>
               </div>
@@ -71,32 +99,26 @@ export default function PropertyDetailPage() {
                     to={`/owners/${property.idOwner}`}
                     className="text-blue-600 hover:underline"
                   >
-                    {property.idOwner}
+                    {owner && (
+                      <div className="mt-2 flex  items-center gap-2">
+                        {owner.photo && (
+                          <img
+                            src={owner.photo}
+                            alt="Owner"
+                            className="mt-2 h-16 w-16 rounded-full object-cover"
+                          />
+                        )}
+                        <p className="text-sm text-gray-600">
+                          <span className="font-semibold">{owner.name}</span>
+                          <span className="block">{owner.address}</span>
+                        </p>
+                      </div>
+                    )}
                   </Link>
                 ) : (
                   <p>Not available</p>
                 )}
               </div>
-            </div>
-
-            <div className="flex gap-4">
-              <Link
-                to={`/properties/edit/${property.id}`}
-                className="bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600 transition-colors"
-              >
-                Edit
-              </Link>
-              <button
-                className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors"
-                onClick={() => {
-                  // Lógica para eliminar
-                  if (confirm("Are you sure you want to delete this property?")) {
-                    // Llamada a la API para eliminar
-                  }
-                }}
-              >
-                Delete
-              </button>
             </div>
           </div>
         </div>
