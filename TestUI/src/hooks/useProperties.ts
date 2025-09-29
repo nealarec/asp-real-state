@@ -5,9 +5,11 @@ import {
   createProperty,
   updateProperty,
   deleteProperty,
+  getPropertyMetadata,
 } from "@/services/propertyService";
 import type { Property, PropertyFormData } from "@/schemas/Property";
 import type { PaginationParams, PaginatedResponse } from "@/schemas/Pagination";
+import type { PropertyMetadataResponse } from "@/schemas/PropertyMetadata";
 
 interface UsePropertiesOptions extends PaginationParams {
   enabled?: boolean;
@@ -61,16 +63,32 @@ export const useProperties = (options: UsePropertiesOptions = {}) => {
     },
   });
 
+  const metadataQuery = useQuery<PropertyMetadataResponse>({
+    queryKey: ["properties", "metadata"],
+    queryFn: getPropertyMetadata,
+    staleTime: 30 * 60 * 1000, // 30 minutes
+  });
+
   return {
+    // Properties data
     properties: propertiesQuery.data || [],
     isLoading: propertiesQuery.isLoading,
     error: propertiesQuery.error,
+    
+    // Metadata
+    metadata: metadataQuery.data,
+    isMetadataLoading: metadataQuery.isLoading,
+    metadataError: metadataQuery.error,
+    
+    // Property operations
     getProperty: propertyQuery,
     createProperty: createPropertyMutation.mutateAsync,
     updateProperty: updatePropertyMutation.mutateAsync,
     deleteProperty: deletePropertyMutation.mutateAsync,
+    
+    // Loading states
     isCreating: createPropertyMutation.isPending,
     isUpdating: updatePropertyMutation.isPending,
     isDeleting: deletePropertyMutation.isPending,
-  };
+  } as const;
 };

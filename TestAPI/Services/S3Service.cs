@@ -100,7 +100,6 @@ public class S3Service : IS3Service
                 url = builder.ToString();
             }
 
-            _logger.LogInformation("URL firmada generada correctamente para {FileName} en el bucket {BucketName}", fileName, bucketName);
             return url;
         }
         catch (Exception ex)

@@ -1,16 +1,16 @@
 import { Link } from "react-router-dom";
 import { useState, useCallback } from "react";
 import { useProperties } from "@/hooks/useProperties";
-import { Skeleton } from "@/components/Atoms/Skeleton";
 import PropertyCard, { PropertyListSkeleton } from "@/components/Molecules/PropertyCard";
 import { Pagination } from "@/components/Organisms/Pagination";
-import { PropertyFilters } from "@/components/Molecules/PropertyFilters/PropertyFilters";
+import { PropertyFilters, MIN_YEAR, MAX_YEAR, MIN_PRICE, MAX_PRICE } from "@/components/Molecules/PropertyFilters/PropertyFilters";
 import type { PropertyFilters as PropertyFiltersType } from "@/components/Molecules/PropertyFilters/PropertyFilters";
 
 export default function PropertiesPage() {
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState<Partial<PropertyFiltersType>>({});
-  
+  const { metadata, isMetadataLoading } = useProperties();
+
   const { properties, isLoading, error } = useProperties({
     page,
     pageSize: 18,
@@ -19,10 +19,10 @@ export default function PropertiesPage() {
 
   const handleFilterChange = useCallback((newFilters: PropertyFiltersType) => {
     setPage(1); // Reset to first page when filters change
-    
+
     // Create a new filters object with only defined values
     const updatedFilters: Partial<PropertyFiltersType> = {};
-    
+
     if (newFilters.search) updatedFilters.search = newFilters.search;
     if (newFilters.ownerId) updatedFilters.ownerId = newFilters.ownerId;
     if (newFilters.minPrice !== undefined) updatedFilters.minPrice = newFilters.minPrice;
@@ -30,7 +30,7 @@ export default function PropertiesPage() {
     if (newFilters.minYear !== undefined) updatedFilters.minYear = newFilters.minYear;
     if (newFilters.maxYear !== undefined) updatedFilters.maxYear = newFilters.maxYear;
     if (newFilters.codeInternal) updatedFilters.codeInternal = newFilters.codeInternal;
-    
+
     setFilters(updatedFilters);
   }, []);
 
@@ -47,7 +47,16 @@ export default function PropertiesPage() {
               Add Property
             </Link>
           </div>
-          <PropertyFilters onFilterChange={handleFilterChange} />
+          <PropertyFilters 
+          onFilterChange={handleFilterChange} 
+          initialFilters={{
+            minPrice: metadata?.priceRange?.min ?? MIN_PRICE,
+            maxPrice: metadata?.priceRange?.max ?? MAX_PRICE,
+            minYear: metadata?.yearRange?.min ?? MIN_YEAR,
+            maxYear: metadata?.yearRange?.max ?? MAX_YEAR,
+          }}
+          isLoading={isMetadataLoading}
+        />
         </div>
         <div className="p-4 text-red-500">Error loading properties: {error.message}</div>
       </div>
@@ -66,19 +75,24 @@ export default function PropertiesPage() {
             Add Property
           </Link>
         </div>
-        <PropertyFilters onFilterChange={handleFilterChange} />
+        <PropertyFilters 
+          onFilterChange={handleFilterChange} 
+          initialFilters={{
+            minPrice: metadata?.priceRange?.min ?? MIN_PRICE,
+            maxPrice: metadata?.priceRange?.max ?? MAX_PRICE,
+            minYear: metadata?.yearRange?.min ?? MIN_YEAR,
+            maxYear: metadata?.yearRange?.max ?? MAX_YEAR,
+          }}
+          isLoading={isMetadataLoading}
+        />
       </div>
 
       {isLoading ? (
-        <div className="grid grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 mb-6 auto-rows-fr">
-          <PropertyListSkeleton count={6} />
-        </div>
+        <PropertyListSkeleton count={6} />
       ) : (
         <div className="grid grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 mb-6 auto-rows-fr">
           {properties?.data?.map((property: any) => (
-            <Link key={property.id} to={`/properties/${property.id}`} className="block">
-              <PropertyCard property={property} />
-            </Link>
+            <PropertyCard property={property} />
           ))}
         </div>
       )}
@@ -95,4 +109,3 @@ export default function PropertiesPage() {
     </div>
   );
 }
-

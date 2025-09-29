@@ -5,6 +5,7 @@ using TestAPI.Model;
 using TestAPI.Model.Responses;
 using TestAPI.Services.DAO;
 using TestAPI.Services.Interfaces;
+using TestAPI.Utils;
 
 namespace TestAPI.Controller;
 
@@ -47,7 +48,16 @@ public class OwnersController : ResourceController<Owner, OwnerService>
 
         if (!string.IsNullOrEmpty(search))
         {
-            filter = Builders<Owner>.Filter.Regex("Name", new BsonRegularExpression(search, "i"));
+            // Normalize the search term (remove diacritics, handle spaces, etc.)
+            var normalizedSearch = search.GetInsensibleRegex();
+
+            // Create a case-insensitive regex pattern
+            var searchPattern = new BsonRegularExpression(normalizedSearch, "i");
+
+            filter = Builders<Owner>.Filter.Or(
+                Builders<Owner>.Filter.Regex("Name", searchPattern),
+                Builders<Owner>.Filter.Regex("Address", searchPattern)
+            );
         }
 
         // Mapear campos de ordenamiento

@@ -5,6 +5,7 @@ using MongoDB.Driver;
 using TestAPI.Model;
 using TestAPI.Model.Responses;
 using TestAPI.Services.DAO;
+using TestAPI.Utils;
 
 namespace TestAPI.Controller;
 
@@ -15,6 +16,27 @@ public class PropertiesController : ResourceController<Property, PropertyService
     public PropertiesController(PropertyService propertyService, ILogger<PropertiesController> logger)
         : base(propertyService, logger, "propiedad")
     {
+    }
+
+    /// <summary>
+    /// Obtiene metadatos sobre las propiedades (rangos de precios, años, etc.)
+    /// </summary>
+    [HttpGet("metadata")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(PropertyMetadataResponse))]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<PropertyMetadataResponse>> GetMetadata()
+    {
+        try
+        {
+            // Obtener metadatos usando agregación de MongoDB
+            var metadata = await _service.GetPropertyMetadataAsync();
+            return Ok(metadata);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving property metadata");
+            return StatusCode(500, "Error retrieving property metadata");
+        }
     }
 
     /// <summary>
@@ -33,6 +55,10 @@ public class PropertiesController : ResourceController<Property, PropertyService
         [FromQuery] int pageSize = 10,
         [FromQuery] string? search = null,
         [FromQuery] string? ownerId = null,
+        [FromQuery] decimal? minPrice = null,
+        [FromQuery] decimal? maxPrice = null,
+        [FromQuery] int? minYear = null,
+        [FromQuery] int? maxYear = null,
         [FromQuery] string? sortBy = null,
         [FromQuery] string sortOrder = "asc")
     {
@@ -40,9 +66,16 @@ public class PropertiesController : ResourceController<Property, PropertyService
 
         if (!string.IsNullOrEmpty(search))
         {
+            // Normalize the search term (remove diacritics, handle spaces, etc.)
+            var normalizedSearch = search.GetInsensibleRegex();
+
+            // Create a case-insensitive regex pattern
+            var searchPattern = new BsonRegularExpression(normalizedSearch, "i");
+
             var searchFilter = Builders<Property>.Filter.Or(
-                Builders<Property>.Filter.Regex(x => x.Name, new BsonRegularExpression(search, "i")),
-                Builders<Property>.Filter.Regex(x => x.Address, new BsonRegularExpression(search, "i"))
+                Builders<Property>.Filter.Regex(x => x.Name, searchPattern),
+                Builders<Property>.Filter.Regex(x => x.Address, searchPattern),
+                Builders<Property>.Filter.Regex(x => x.CodeInternal, searchPattern)
             );
             filters.Add(searchFilter);
         }
@@ -50,6 +83,26 @@ public class PropertiesController : ResourceController<Property, PropertyService
         if (!string.IsNullOrEmpty(ownerId) && ObjectId.TryParse(ownerId, out _))
         {
             filters.Add(Builders<Property>.Filter.Eq(x => x.IdOwner, ownerId));
+        }
+
+        if (minPrice.HasValue)
+        {
+            filters.Add(Builders<Property>.Filter.Gte(x => x.Price, minPrice.Value));
+        }
+
+        if (maxPrice.HasValue)
+        {
+            filters.Add(Builders<Property>.Filter.Lte(x => x.Price, maxPrice.Value));
+        }
+
+        if (minYear.HasValue)
+        {
+            filters.Add(Builders<Property>.Filter.Gte(x => x.Year, minYear.Value));
+        }
+
+        if (maxYear.HasValue)
+        {
+            filters.Add(Builders<Property>.Filter.Lte(x => x.Year, maxYear.Value));
         }
 
         var filter = filters.Count > 0

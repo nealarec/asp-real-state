@@ -11,6 +11,7 @@ import { useIsMobile } from "@/hooks/useIsMobile";
 interface PropertyFiltersProps {
   onFilterChange: (filters: PropertyFilters) => void;
   initialFilters?: Partial<PropertyFilters>;
+  isLoading?: boolean;
 }
 
 export interface PropertyFilters {
@@ -23,12 +24,35 @@ export interface PropertyFilters {
   codeInternal: string;
 }
 
-const MIN_YEAR = 1900;
-const MAX_YEAR = new Date().getFullYear() + 1;
-const MIN_PRICE = 0;
-const MAX_PRICE = 10000000; // 10M
+// Default values in case metadata is not available
+export const MIN_YEAR = 1900;
+export const MAX_YEAR = new Date().getFullYear() + 1;
+export const MIN_PRICE = 0;
+export const MAX_PRICE = 10000000; // 10M
 
-export function PropertyFilters({ onFilterChange, initialFilters = {} }: PropertyFiltersProps) {
+export function PropertyFilters({
+  onFilterChange,
+  initialFilters = {},
+  isLoading = false,
+}: PropertyFiltersProps) {
+  // Use metadata from initialFilters or fallback to defaults
+  const minPrice = initialFilters.minPrice ?? MIN_PRICE;
+  const maxPrice = initialFilters.maxPrice ?? MAX_PRICE;
+  const minYear = initialFilters.minYear ?? MIN_YEAR;
+  const maxYear = initialFilters.maxYear ?? MAX_YEAR;
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="animate-pulse space-y-4 p-4 bg-gray-50 rounded-lg">
+        <div className="h-6 bg-gray-200 rounded w-1/4"></div>
+        <div className="space-y-4">
+          <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+        </div>
+      </div>
+    );
+  }
   const isMobile = useIsMobile();
   const [showFilters, setShowFilters] = useState(false);
 
@@ -36,11 +60,10 @@ export function PropertyFilters({ onFilterChange, initialFilters = {} }: Propert
     defaultValues: {
       search: initialFilters.search ?? "",
       ownerId: initialFilters.ownerId ?? "",
-      minPrice: initialFilters.minPrice ?? MIN_PRICE,
-      maxPrice: initialFilters.maxPrice ?? MAX_PRICE,
-      minYear: initialFilters.minYear ?? MIN_YEAR,
-      maxYear: initialFilters.maxYear ?? MAX_YEAR,
-      codeInternal: initialFilters.codeInternal ?? ""
+      minPrice: minPrice,
+      maxPrice: maxPrice,
+      minYear: minYear,
+      maxYear: maxYear,
     },
   });
 
@@ -57,10 +80,10 @@ export function PropertyFilters({ onFilterChange, initialFilters = {} }: Propert
     reset({
       search: "",
       ownerId: "",
-      minPrice: MIN_PRICE,
-      maxPrice: MAX_PRICE,
-      minYear: MIN_YEAR,
-      maxYear: MAX_YEAR,
+      minPrice: minPrice,
+      maxPrice: maxPrice,
+      minYear: minYear,
+      maxYear: maxYear,
       codeInternal: "",
     });
   };
@@ -97,13 +120,13 @@ export function PropertyFilters({ onFilterChange, initialFilters = {} }: Propert
             control={control}
             render={({ field }) => (
               <Slider
-                min={MIN_PRICE}
-                max={MAX_PRICE}
+                min={minPrice}
+                max={maxPrice}
                 step={1000}
                 value={[field.value, watch("maxPrice")]}
                 onValueChange={([min, max]) => {
                   field.onChange(min);
-                  if (typeof max === 'number') {
+                  if (typeof max === "number") {
                     setValue("maxPrice", max, { shouldDirty: true });
                   }
                 }}
@@ -126,13 +149,13 @@ export function PropertyFilters({ onFilterChange, initialFilters = {} }: Propert
             control={control}
             render={({ field }) => (
               <Slider
-                min={MIN_YEAR}
-                max={MAX_YEAR}
+                min={minYear}
+                max={maxYear}
                 step={1}
                 value={[field.value, watch("maxYear")]}
                 onValueChange={([min, max]) => {
                   field.onChange(min);
-                  if (typeof max === 'number') {
+                  if (typeof max === "number") {
                     setValue("maxYear", max, { shouldDirty: true });
                   }
                 }}
@@ -265,17 +288,6 @@ export function PropertyFilters({ onFilterChange, initialFilters = {} }: Propert
                 <span>{watch("maxYear")}</span>
               </div>
             </div>
-          </div>
-
-          <div className="space-y-1">
-            <label className="block text-sm font-medium text-gray-700">Internal Code</label>
-            <Controller
-              name="codeInternal"
-              control={control}
-              render={({ field }) => (
-                <Input {...field} type="text" placeholder="Enter code..." className="w-full" />
-              )}
-            />
           </div>
 
           <Button type="button" variant="secondary" onClick={handleReset} className="w-full mt-2">

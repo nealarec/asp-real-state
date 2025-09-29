@@ -1,6 +1,7 @@
 import type { Property, PropertyFormData } from "@/schemas/Property";
 import type { PropertyImage } from "@/schemas/PropertyImage";
 import type { PaginationParams, PaginatedResponse } from "@/schemas/Pagination";
+import type { PropertyMetadataResponse } from "@/schemas/PropertyMetadata";
 import { buildUrl } from "@/lib/utils";
 
 export const getProperties = async (
@@ -79,6 +80,18 @@ export const deleteProperty = async (id: string): Promise<void> => {
     const error = await response.json().catch(() => ({}));
     throw new Error(error.message || "Error deleting property");
   }
+};
+
+export const getPropertyMetadata = async (): Promise<PropertyMetadataResponse> => {
+  const url = buildUrl("/properties/metadata");
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.message || "Error getting property metadata");
+  }
+
+  return response.json();
 };
 
 export const getPropertyImages = async (propertyId: string): Promise<PropertyImage[]> => {

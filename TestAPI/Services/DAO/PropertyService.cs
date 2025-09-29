@@ -1,3 +1,4 @@
+using MongoDB.Bson;
 using MongoDB.Driver;
 using TestAPI.Model;
 using TestAPI.Model.Responses;
@@ -141,6 +142,107 @@ public class PropertyService : BaseService<Property>
         catch
         {
             return string.Empty;
+        }
+    }
+
+    // Helper method to safely get decimal values
+    private decimal GetDecimalValue(BsonValue value, decimal defaultValue = 0)
+    {
+        try
+        {
+            if (value == null || value.IsBsonNull) return defaultValue;
+
+            if (value.IsDecimal128) return Decimal128.ToDecimal(value.AsDecimal128);
+            if (value.IsDouble) return Convert.ToDecimal(value.AsDouble);
+            if (value.IsInt32) return value.AsInt32;
+            if (value.IsInt64) return value.AsInt64;
+
+            return defaultValue;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al convertir valor decimal: {Value}", value);
+            return defaultValue;
+        }
+    }
+
+    public async Task<PropertyMetadataResponse> GetPropertyMetadataAsync()
+    {
+        _logger.LogInformation("Iniciando obtención de metadatos de propiedades");
+
+        try
+        {
+            _logger.LogDebug("Construyendo pipeline de agregación");
+            var pipeline = new[]
+            {
+                new BsonDocument("$group",
+                    new BsonDocument
+                    {
+                        { "_id", BsonNull.Value },
+                        { "minPrice", new BsonDocument("$min", "$price") },
+                        { "maxPrice", new BsonDocument("$max", "$price") },
+                        { "avgPrice", new BsonDocument("$avg", "$price") },
+                        { "minYear", new BsonDocument("$min", "$year") },
+                        { "maxYear", new BsonDocument("$max", "$year") },
+                        { "totalProperties", new BsonDocument("$sum", 1) }
+                    }
+                )
+            };
+
+            _logger.LogDebug("Ejecutando consulta de agregación en MongoDB");
+            var result = await _collection.Aggregate<BsonDocument>(pipeline).FirstOrDefaultAsync();
+
+            // Log the raw result for debugging
+            _logger.LogDebug("Resultado de la agregación: {Result}", result?.ToJson());
+
+            // If there are no properties or the aggregation returned null, return default values
+            if (result == null || !result.Contains("totalProperties") || result["totalProperties"].AsInt32 == 0)
+            {
+                _logger.LogInformation("No se encontraron propiedades en la base de datos, retornando valores por defecto");
+                return new PropertyMetadataResponse
+                {
+                    PriceRange = new PriceRange { Min = 0, Max = 0, Average = 0 },
+                    YearRange = new YearRange { Min = 1900, Max = DateTime.Now.Year },
+                    TotalProperties = 0
+                };
+            }
+
+            _logger.LogInformation("Procesando resultados de la agregación");
+
+            var response = new PropertyMetadataResponse
+            {
+                PriceRange = new PriceRange
+                {
+                    Min = GetDecimalValue(result.GetValue("minPrice", BsonNull.Value)),
+                    Max = GetDecimalValue(result.GetValue("maxPrice", BsonNull.Value), 10000000),
+                    Average = GetDecimalValue(result.GetValue("avgPrice", BsonNull.Value))
+                },
+                YearRange = new YearRange
+                {
+                    Min = (int)GetDecimalValue(result.GetValue("minYear", BsonNull.Value), 1900),
+                    Max = (int)GetDecimalValue(result.GetValue("maxYear", BsonNull.Value), DateTime.Now.Year)
+                },
+                TotalProperties = (int)GetDecimalValue(result.GetValue("totalProperties", BsonNull.Value), 0)
+            };
+
+            _logger.LogInformation("Metadatos generados exitosamente. Total de propiedades: {Count}", response.TotalProperties);
+            _logger.LogDebug("Rango de precios: Min={MinPrice}, Max={MaxPrice}, Promedio={AvgPrice}",
+                response.PriceRange.Min, response.PriceRange.Max, response.PriceRange.Average);
+            _logger.LogDebug("Rango de años: Min={MinYear}, Max={MaxYear}",
+                response.YearRange.Min, response.YearRange.Max);
+
+            return response;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al obtener los metadatos de las propiedades");
+            // Return default values in case of error
+            return new PropertyMetadataResponse
+            {
+                PriceRange = new PriceRange { Min = 0, Max = 0, Average = 0 },
+                YearRange = new YearRange { Min = 1900, Max = DateTime.Now.Year },
+                TotalProperties = 0
+            };
         }
     }
 }
