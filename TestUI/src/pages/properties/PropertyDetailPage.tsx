@@ -1,26 +1,29 @@
 import type { Property } from "@/schemas/Property";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import placeholderImage from "@/assets/house-placeholder.svg";
+import { PropertyImageGallery } from "@/components/Molecules/PropertyImageGallery";
+import { usePropertyImages } from "@/hooks/usePropertyImages";
 
 export default function PropertyDetailPage() {
-  const { id } = useParams<{ id: string }>();
+  const { id = "" } = useParams<{ id: string }>();
 
   const {
     data: property,
     isLoading,
     error,
-  } = useQuery<Property>({
+  } = useQuery<Property | undefined>({
     queryKey: ["property", id],
     queryFn: () => fetch(`/api/properties/${id}`).then(res => res.json()),
   });
 
-  const [showPlaceholder, setShowPlaceholder] = useState(!property?.coverImageUrl);
+  const { data: images = [], isLoading: isLoadingImages } = usePropertyImages(id);
+  if (isLoading) return <div className="p-4">Cargando propiedad...</div>;
+  if (error) return <div className="p-4">Error al cargar la propiedad</div>;
+  if (!property) return <div className="p-4">Propiedad no encontrada</div>;
 
-  if (isLoading) return <div>Cargando propiedad...</div>;
-  if (error) return <div>Error al cargar la propiedad</div>;
-  if (!property) return <div>Propiedad no encontrada</div>;
+  // Use existing images array directly since it already includes the cover image
+  const allImages = images;
 
   return (
     <div className="p-4">
@@ -39,14 +42,23 @@ export default function PropertyDetailPage() {
           </span>
         </div>
 
+        {/* Main Content */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <img
-              src={showPlaceholder ? placeholderImage : property.coverImageUrl}
-              alt={property.name}
-              className="w-full h-auto rounded-lg bg-gray-200"
-              onError={() => setShowPlaceholder(true)}
-            />
+          {/* Image Gallery */}
+          <div className="mb-8">
+            {isLoadingImages ? (
+              <div className="aspect-video bg-gray-100 rounded-lg animate-pulse"></div>
+            ) : allImages.length > 0 ? (
+              <PropertyImageGallery images={allImages} />
+            ) : (
+              <div className="aspect-video bg-gray-100 rounded-lg flex items-center justify-center">
+                <img
+                  src={placeholderImage}
+                  alt="No hay imágenes disponibles"
+                  className="h-full w-full object-contain p-8 opacity-20"
+                />
+              </div>
+            )}
           </div>
 
           <div>

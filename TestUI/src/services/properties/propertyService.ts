@@ -89,8 +89,22 @@ export const uploadPropertyImage = async (
 
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(error.message || "Error al subir las imágenes");
+    throw new Error(error.message || "Error al subir la imagen");
   }
 
   return response.json();
+};
+
+export const deletePropertyImage = async (
+  propertyId: string,
+  imageId: string
+): Promise<void> => {
+  const response = await fetch(`${API_BASE_URL}/properties/${propertyId}/images/${imageId}`, {
+    method: "DELETE",
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || "Error al eliminar la imagen");
+  }
 };

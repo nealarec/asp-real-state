@@ -3,14 +3,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  createProperty,
-  getPropertyById,
-  updateProperty,
-  uploadPropertyImage,
-  getPropertyImages,
-} from "../../services/properties/propertyService";
-import { Input, Textarea, Button, FormGroup, FileInput } from "../../components/Atoms/Form";
+import * as propertyService from "../../services/properties/propertyService";
+import { Input, Textarea, Button, FormGroup } from "../../components/Atoms/Form";
 import { propertyFormSchema, type Property } from "@/schemas/Property";
 import type { PropertyImage } from "@/schemas/PropertyImage";
 import type { PropertyFormData } from "@/types/property";
@@ -19,7 +13,7 @@ type FormValues = PropertyFormData & {
   images?: FileList;
 };
 
-import { PropertyImageManager } from "@/components/Organisms/PropertyImageManager/PropertyImageManager";
+import { PropertyImageManager } from "@/components/Organisms/PropertyImageManager";
 
 const PropertyImagesForm: React.FC<{
   propertyImages: PropertyImage[];
@@ -51,21 +45,21 @@ const PropertyFormPage: React.FC = () => {
   // Fetch property data in edit mode
   const { data: property, isLoading: isLoadingProperty } = useQuery<Property | null>({
     queryKey: ["property", id],
-    queryFn: () => (id ? getPropertyById(id) : null),
+    queryFn: () => (id ? propertyService.getPropertyById(id) : null),
     enabled: isEditMode,
   });
 
   // Fetch property images
   const { data: propertyImages = [] } = useQuery<PropertyImage[]>({
     queryKey: ["propertyImages", propertyId],
-    queryFn: () => (propertyId ? getPropertyImages(propertyId) : []),
+    queryFn: () => (propertyId ? propertyService.getPropertyImages(propertyId) : []),
     enabled: !!propertyId,
   });
 
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isDirty },
     reset,
   } = useForm<FormValues>({
     resolver: zodResolver(propertyFormSchema),
@@ -94,9 +88,9 @@ const PropertyFormPage: React.FC = () => {
   const propertyMutation = useMutation({
     mutationFn: async (data: FormValues) => {
       if (isEditMode && id) {
-        return updateProperty(id, data);
+        return propertyService.updateProperty(id, data);
       }
-      return createProperty(data);
+      return propertyService.createProperty(data);
     },
     onSuccess: data => {
       setPropertyId(data.id);
@@ -104,21 +98,19 @@ const PropertyFormPage: React.FC = () => {
       if (!isEditMode) {
         navigate(`/propiedades/editar/${data.id}`);
       } else {
-        // Show success message or toast
+        reset(data);
       }
     },
   });
 
   // Upload images mutation
   const imageUploadMutation = useMutation({
-    mutationFn: async ({ propertyId, files }: { propertyId: string; files: File | FileList }) => {
-      const filesArray = Array.isArray(files) ? files : [files];
-
-      const uploadPromises = Array.from(filesArray).map(async file => {
+    mutationFn: async ({ propertyId, files }: { propertyId: string; files: FileList }) => {
+      const uploadPromises = Array.from(files).map(async file => {
         const formData = new FormData();
         console.log(file);
         formData.append("file", file, file.name);
-        return uploadPropertyImage(propertyId, formData);
+        return propertyService.uploadPropertyImage(propertyId, formData);
       });
       return Promise.all(uploadPromises);
     },
@@ -133,17 +125,8 @@ const PropertyFormPage: React.FC = () => {
   // Delete image mutation
   const deleteImageMutation = useMutation({
     mutationFn: async (imageId: string) => {
-      const response = await fetch(
-        `${import.meta.env["VITE_API_BASE_URL"]}/properties/${propertyId}/images/${imageId}`,
-        {
-          method: "DELETE",
-        }
-      );
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Error al eliminar la imagen");
-      }
+      if (!propertyId) throw new Error("Property ID is required");
+      return propertyService.deletePropertyImage(propertyId, imageId);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["propertyImages", propertyId] });
@@ -154,13 +137,11 @@ const PropertyFormPage: React.FC = () => {
   const handleDeleteImage = async (imageId: string) => {
     if (!propertyId) return;
 
-    if (window.confirm("¿Estás seguro de que deseas eliminar esta imagen?")) {
-      try {
-        await deleteImageMutation.mutateAsync(imageId);
-      } catch (error) {
-        console.error("Error deleting image:", error);
-        // Show error message or toast
-      }
+    try {
+      await deleteImageMutation.mutateAsync(imageId);
+    } catch (error) {
+      console.error("Error deleting image:", error);
+      // Show error message or toast
     }
   };
 
@@ -220,6 +201,20 @@ const PropertyFormPage: React.FC = () => {
       <h2 className="text-2xl font-bold text-gray-900 mb-6">
         {isEditMode ? "Editar Propiedad" : "Nueva Propiedad"}
       </h2>
+      <div className="pb-6">
+        {/* El formulario de imágenes ahora es independiente */}
+        {propertyId && (
+          <PropertyImagesForm
+            propertyImages={propertyImages}
+            onUpload={async (files: FileList) => {
+              await imageUploadMutation.mutateAsync({ propertyId, files });
+            }}
+            onDelete={handleDeleteImage}
+            onSetAsMain={handleSetAsMain}
+            isLoading={imageUploadMutation.isPending || deleteImageMutation.isPending}
+          />
+        )}
+      </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <div className="space-y-6">
@@ -291,24 +286,11 @@ const PropertyFormPage: React.FC = () => {
           >
             Cancelar
           </Button>
-          <Button type="submit" isLoading={isLoading} disabled={isLoading}>
+          <Button type="submit" isLoading={isLoading} disabled={isLoading || !isDirty}>
             {isEditMode ? "Guardar Cambios" : "Crear Propiedad"}
           </Button>
         </div>
       </form>
-
-      {/* El formulario de imágenes ahora es independiente */}
-      {propertyId && (
-        <PropertyImagesForm
-          propertyImages={propertyImages}
-          onUpload={async (files: FileList) => {
-            await imageUploadMutation.mutateAsync({ propertyId, files });
-          }}
-          onDelete={handleDeleteImage}
-          onSetAsMain={handleSetAsMain}
-          isLoading={imageUploadMutation.isPending || deleteImageMutation.isPending}
-        />
-      )}
     </div>
   );
 };

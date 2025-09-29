@@ -1,9 +1,13 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { Property } from "@/schemas/Property";
 import housePlaceholder from "@/assets/house-placeholder.svg";
 
 export default function PropertyCard({ property }: { property: Property }) {
   const [showPlaceholder, setShowPlaceholder] = useState(!property.coverImageUrl);
+
+  useEffect(() => {
+    setShowPlaceholder(!property.coverImageUrl);
+  }, [property.coverImageUrl]);
 
   return (
     <div className="p-4 border rounded-lg shadow-sm flex flex-col sm:flex-row gap-4 bg-white hover:shadow-md transition-shadow">
