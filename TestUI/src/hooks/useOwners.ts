@@ -11,7 +11,7 @@ import type { Owner } from "@/schemas/Owner";
 import type { Property } from "@/schemas/Property";
 import type { PaginationParams, PaginatedResponse } from "@/schemas/Pagination";
 
-export const useOwners = (params?: PaginationParams) => {
+export const useOwners = (params?: Partial<PaginationParams>) => {
   const queryClient = useQueryClient();
 
   // Owners list query

@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
 import { useDropzone, type FileWithPath } from "react-dropzone";
 import { FiUpload, FiX } from "react-icons/fi";
-import { DeleteConfirmation } from "@/components/Molecules/DeleteConfirmation/DeleteConfirmation";
+import { DeleteConfirmation } from "@/components/Molecules/DeleteConfirmation";
 
 type ImageDropzoneProps = {
   onDrop: (acceptedFiles: FileWithPath[]) => Promise<void>;

@@ -9,14 +9,8 @@ import { propertyFormSchema } from "@/schemas/Property";
 import type { PropertyFormData } from "@/schemas/Property";
 import { PropertyImageManager } from "@/components/Organisms/PropertyImageManager";
 import { useProperties } from "@/hooks/useProperties";
-import { useOwners } from "@/hooks/useOwners";
 import { usePropertyImages } from "@/hooks/usePropertyImages";
-import type { Owner } from "@/schemas/Owner";
-
-// Simple loading spinner component
-const LoadingSpinner = () => (
-  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-);
+import { OwnerSelect } from "@/components/Molecules/OwnerSelect";
 
 const PropertyFormPage: React.FC = () => {
   const { id } = useParams<{ id?: string }>();
@@ -32,11 +26,8 @@ const PropertyFormPage: React.FC = () => {
     error: propertyError,
   } = useProperties();
 
-  // Use the owners hook
-  const { owners, isLoading: isLoadingOwners, error: ownersError } = useOwners();
-
   // Get property data
-  const { data: property, isLoading: isLoadingProperty } = getProperty(id || "");
+  const { data: property } = getProperty(id || "");
 
   const isSubmitting = isCreating || isUpdating;
 
@@ -56,8 +47,9 @@ const PropertyFormPage: React.FC = () => {
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isDirty },
     reset,
+    watch,
   } = form;
 
   // Use the property images hook
@@ -86,7 +78,7 @@ const PropertyFormPage: React.FC = () => {
         await createProperty(data);
         toast.success("Property created successfully");
       }
-      navigate("/properties");
+      navigate(isEditMode ? `/properties/${id}` : "/properties");
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "An error occurred";
       toast.error(`Error: ${errorMessage}`);
@@ -107,23 +99,10 @@ const PropertyFormPage: React.FC = () => {
   };
 
   // Handle loading and error states
-  if (isLoadingProperty || isLoadingOwners) {
-    return (
-      <div className="flex justify-center items-center min-h-[400px]">
-        <div className="flex flex-col items-center">
-          <LoadingSpinner />
-          <p className="mt-2">Loading data...</p>
-        </div>
-      </div>
-    );
-  }
 
-  if (propertyError || ownersError || imagesError) {
+  if (propertyError || imagesError) {
     const errorMessage =
-      propertyError?.message ||
-      ownersError?.message ||
-      imagesError?.message ||
-      "An error occurred while loading data";
+      propertyError?.message || imagesError?.message || "An error occurred while loading data";
 
     return (
       <div className="bg-white shadow rounded-lg p-6 max-w-4xl mx-auto">
@@ -134,17 +113,19 @@ const PropertyFormPage: React.FC = () => {
 
   return (
     <div className="bg-white shadow rounded-lg p-6 max-w-4xl mx-auto">
-      <div className="mt-8 mb-8 border-b border-gray-200 pb-4">
-        <PropertyImageManager
-          images={images || []}
-          onUpload={handleImageUpload}
-          onDelete={handleDeleteImage}
-          onSetAsMain={handleSetAsMain}
-          isLoading={isLoadingImages || isSubmitting}
-          uploadTitle="Upload Images"
-          emptyMessage="No images uploaded yet"
-        />
-      </div>
+      {id ? (
+        <div className="mt-8 mb-8 border-b border-gray-200 pb-4">
+          <PropertyImageManager
+            images={images || []}
+            onUpload={handleImageUpload}
+            onDelete={handleDeleteImage}
+            onSetAsMain={handleSetAsMain}
+            isLoading={isLoadingImages || isSubmitting}
+            uploadTitle="Upload Images"
+            emptyMessage="No images uploaded yet"
+          />
+        </div>
+      ) : null}
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <FormGroup label="Property Name" error={errors.name?.message}>
@@ -190,18 +171,11 @@ const PropertyFormPage: React.FC = () => {
           </FormGroup>
 
           <FormGroup label="Owner" error={errors.idOwner?.message}>
-            <select
-              {...register("idOwner")}
-              disabled={isSubmitting || isLoadingOwners}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="">Select an owner</option>
-              {owners?.map((owner: Owner) => (
-                <option key={owner.id} value={owner.id}>
-                  {owner.name}
-                </option>
-              ))}
-            </select>
+            <OwnerSelect
+              value={watch("idOwner")}
+              onChange={value => form.setValue("idOwner", value)}
+              disabled={isSubmitting || !!id}
+            />
           </FormGroup>
         </div>
 
@@ -209,13 +183,13 @@ const PropertyFormPage: React.FC = () => {
           <Button
             type="button"
             variant="secondary"
-            onClick={() => navigate("/properties")}
+            onClick={() => navigate(id ? `/properties/${id}` : "/properties")}
             disabled={isSubmitting}
             className="w-full sm:w-auto"
           >
             Cancel
           </Button>
-          <Button type="submit" disabled={isSubmitting} className="w-full sm:w-auto">
+          <Button type="submit" disabled={isSubmitting || !isDirty} className="w-full sm:w-auto">
             {isSubmitting ? "Saving..." : "Save Property"}
           </Button>
         </div>

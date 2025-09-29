@@ -1,6 +1,6 @@
 import React from "react";
 import { ImageDropzone } from "@/components/Atoms/Image/ImageDropzone";
-import { DeleteConfirmation } from "../Molecules/DeleteConfirmation/DeleteConfirmation";
+import { DeleteConfirmation } from "../Molecules/DeleteConfirmation";
 import type { PropertyImage } from "@/schemas/PropertyImage";
 
 type PropertyImageManagerProps = {
