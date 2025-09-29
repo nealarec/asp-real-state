@@ -1,6 +1,6 @@
-import React from 'react';
-import { ImageThumbnail } from '../../Atoms/Image/ImageThumbnail';
-import { ImageActions } from './ImageActions';
+import React from "react";
+import { ImageThumbnail } from "../../Atoms/Image/ImageThumbnail";
+import { ImageActions } from "./ImageActions";
 
 type ImageItem = {
   id: string;
@@ -21,7 +21,7 @@ export const ImageGrid: React.FC<ImageGridProps> = ({
   onDelete,
   onSetAsMain,
   isLoading = false,
-  className = '',
+  className = "",
 }) => {
   if (images.length === 0) return null;
 
@@ -29,7 +29,7 @@ export const ImageGrid: React.FC<ImageGridProps> = ({
     <div className={`mb-6 ${className}`}>
       <h4 className="text-md font-medium text-gray-700 mb-3">Imágenes actuales</h4>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-        {images.map((image) => (
+        {images.map(image => (
           <div key={image.id} className="relative group">
             <ImageThumbnail
               src={image.fileUrl}

@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 type ImageActionsProps = {
   isMain: boolean;
@@ -13,9 +13,11 @@ export const ImageActions: React.FC<ImageActionsProps> = ({
   onDelete,
   onSetAsMain,
   disabled = false,
-  className = '',
+  className = "",
 }) => (
-  <div className={`absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 ${className}`}>
+  <div
+    className={`absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 ${className}`}
+  >
     {!isMain && (
       <>
         <button

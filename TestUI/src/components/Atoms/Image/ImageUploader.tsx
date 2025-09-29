@@ -1,5 +1,5 @@
-import type { FieldValues, Path, Control } from 'react-hook-form';
-import { FileInput } from '../Form/FileInput';
+import type { FieldValues, Path, Control } from "react-hook-form";
+import { FileInput } from "../Form/FileInput";
 
 type ImageUploaderProps<T extends FieldValues> = {
   name: Path<T>;

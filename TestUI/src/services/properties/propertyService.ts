@@ -95,10 +95,7 @@ export const uploadPropertyImage = async (
   return response.json();
 };
 
-export const deletePropertyImage = async (
-  propertyId: string,
-  imageId: string
-): Promise<void> => {
+export const deletePropertyImage = async (propertyId: string, imageId: string): Promise<void> => {
   const response = await fetch(`${API_BASE_URL}/properties/${propertyId}/images/${imageId}`, {
     method: "DELETE",
   });

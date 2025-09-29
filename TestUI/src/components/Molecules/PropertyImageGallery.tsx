@@ -36,7 +36,7 @@ export function PropertyImageGallery({ images = [], className = "" }: PropertyIm
       {/* Main Image */}
       <div className="relative aspect-video bg-gray-100 rounded-lg overflow-hidden">
         <img
-          src={images[mainImageIndex]?.fileUrl || ''}
+          src={images[mainImageIndex]?.fileUrl || ""}
           alt="Property"
           className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
           onClick={openLightbox}
@@ -50,7 +50,7 @@ export function PropertyImageGallery({ images = [], className = "" }: PropertyIm
             <div
               key={image.id}
               className={`relative aspect-square rounded-md overflow-hidden cursor-pointer transition-opacity ${
-                index === mainImageIndex ? 'ring-2 ring-blue-500' : 'opacity-80 hover:opacity-100'
+                index === mainImageIndex ? "ring-2 ring-blue-500" : "opacity-80 hover:opacity-100"
               }`}
               onClick={() => setMainImageIndex(index)}
             >

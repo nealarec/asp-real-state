@@ -19,8 +19,8 @@ const Layout = ({ children }: LayoutProps) => {
                 </Link>
               </div>
               <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-                <NavLink to="/propietarios">Propietarios</NavLink>
                 <NavLink to="/propiedades">Propiedades</NavLink>
+                <NavLink to="/propietarios">Propietarios</NavLink>
               </div>
             </div>
           </div>

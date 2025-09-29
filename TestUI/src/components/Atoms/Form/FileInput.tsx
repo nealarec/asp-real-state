@@ -1,15 +1,18 @@
-import { useController } from 'react-hook-form';
-import type { FieldValues, Path, RegisterOptions, Control } from 'react-hook-form';
-import { type ComponentProps, type ChangeEvent } from 'react';
+import { useController } from "react-hook-form";
+import type { FieldValues, Path, RegisterOptions, Control } from "react-hook-form";
+import { type ComponentProps, type ChangeEvent } from "react";
 
 type FileInputRules<T extends FieldValues> = Omit<
-  RegisterOptions<T, Path<T>>, 
-  'valueAsNumber' | 'valueAsDate' | 'setValueAs' | 'disabled'
+  RegisterOptions<T, Path<T>>,
+  "valueAsNumber" | "valueAsDate" | "setValueAs" | "disabled"
 > & {
   required?: string | { value: boolean; message: string } | boolean;
 };
 
-type FileInputProps<T extends FieldValues> = Omit<ComponentProps<'input'>, 'defaultValue' | 'name' | 'onChange' | 'value'> & {
+type FileInputProps<T extends FieldValues> = Omit<
+  ComponentProps<"input">,
+  "defaultValue" | "name" | "onChange" | "value"
+> & {
   label?: string;
   error?: string;
   containerClassName?: string;
@@ -26,9 +29,9 @@ export function FileInput<T extends FieldValues>({
   rules,
   label,
   error,
-  containerClassName = '',
-  className = '',
-  accept = 'image/*',
+  containerClassName = "",
+  className = "",
+  accept = "image/*",
   multiple = false,
   ...props
 }: FileInputProps<T>) {
@@ -47,14 +50,14 @@ export function FileInput<T extends FieldValues>({
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    
+
     // This is for react-hook-form
     if (files) {
       const dataTransfer = new DataTransfer();
       Array.from(files).forEach(file => dataTransfer.items.add(file));
       e.target.files = dataTransfer.files;
     }
-    
+
     onChange(e);
   };
 
@@ -63,9 +66,7 @@ export function FileInput<T extends FieldValues>({
       {label && (
         <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor={fileInputId}>
           {label}
-          {isRequired && (
-            <span className="text-red-500 ml-1">*</span>
-          )}
+          {isRequired && <span className="text-red-500 ml-1">*</span>}
         </label>
       )}
       <div className="mt-1 flex items-center">
@@ -81,9 +82,7 @@ export function FileInput<T extends FieldValues>({
           {...props}
         />
       </div>
-      {errorMessage && (
-        <p className="mt-1 text-sm text-red-600">{errorMessage}</p>
-      )}
+      {errorMessage && <p className="mt-1 text-sm text-red-600">{errorMessage}</p>}
     </div>
   );
 }

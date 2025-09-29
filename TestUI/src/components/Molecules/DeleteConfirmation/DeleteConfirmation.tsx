@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 type DeleteConfirmationProps = {
   isOpen: boolean;
@@ -15,10 +15,10 @@ export const DeleteConfirmation: React.FC<DeleteConfirmationProps> = ({
   isOpen,
   onConfirm,
   onCancel,
-  title = '¿Eliminar imagen?',
-  message = '¿Estás seguro de que deseas eliminar este elemento? Esta acción no se puede deshacer.',
-  confirmText = 'Eliminar',
-  cancelText = 'Cancelar',
+  title = "¿Eliminar imagen?",
+  message = "¿Estás seguro de que deseas eliminar este elemento? Esta acción no se puede deshacer.",
+  confirmText = "Eliminar",
+  cancelText = "Cancelar",
   isLoading = false,
 }) => {
   if (!isOpen) return null;
@@ -43,7 +43,7 @@ export const DeleteConfirmation: React.FC<DeleteConfirmationProps> = ({
             className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
             disabled={isLoading}
           >
-            {isLoading ? 'Eliminando...' : confirmText}
+            {isLoading ? "Eliminando..." : confirmText}
           </button>
         </div>
       </div>

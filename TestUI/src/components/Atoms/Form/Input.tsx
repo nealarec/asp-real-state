@@ -27,7 +27,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           }`}
           {...props}
         />
-        {error && typeof error === 'object' && error.message && (
+        {error && typeof error === "object" && error.message && (
           <p className="mt-1 text-sm text-red-600">{error.message}</p>
         )}
       </div>
