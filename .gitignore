@@ -42,3 +42,9 @@ node_modules
 dist
 dist-ssr
 *.local
+tsconfig.tsbuildinfo
+
+# Static files
+TestAPI/wwwroot
+publish
+app.zip
