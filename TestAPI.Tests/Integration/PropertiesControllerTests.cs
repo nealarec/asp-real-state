@@ -63,7 +63,7 @@ public class PropertiesControllerTests : IntegrationTestBase
     public async Task GetPropertyById_WithInvalidId_ReturnsNotFound()
     {
         // Arrange
-        var invalidId = "507f1f77bcf86cd799439011"; // ID válido pero que no existe
+        var invalidId = "507f1f77bcf86cd799439011"; // Valid ID that doesn't exist
 
         // Act
         var response = await Client.GetAsync($"/api/properties/{invalidId}");
@@ -163,7 +163,7 @@ public class PropertiesControllerTests : IntegrationTestBase
         // Assert
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.NoContent));
 
-        // Verificar que ya no existe
+        // Verify it no longer exists
         var getResponse = await Client.GetAsync($"/api/properties/{testProperty.Id}");
         Assert.That(getResponse.StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
     }

@@ -34,35 +34,35 @@ public abstract class IntegrationTestBase : IDisposable
 
     protected IntegrationTestBase()
     {
-        // Inicializar Mongo2Go
+        // Initialize Mongo2Go
         _mongoDbRunner = MongoDbRunner.Start();
 
-        // Configurar el cliente de MongoDB
+        // Configure the MongoDB client
         var mongoClient = new MongoClient(_mongoDbRunner.ConnectionString);
         _database = mongoClient.GetDatabase("TestDB");
 
-        // Crear el mock de S3Service
+        // Create the S3Service mock
         _mockS3Service = new MockS3Service();
 
-        // Configurar WebApplicationFactory
+        // Configure WebApplicationFactory
         Factory = new WebApplicationFactory<Program>()
             .WithWebHostBuilder(builder =>
             {
-                // Configurar servicios
+                // Configure services
                 builder.ConfigureServices(services =>
                 {
-                    // Configurar MongoDB para pruebas
+                    // Configure MongoDB for tests
                     services.Configure<MongoDBSettings>(options =>
                     {
                         options.ConnectionString = _mongoDbRunner.ConnectionString;
                         options.DatabaseName = "TestDB";
                     });
 
-                    // Reemplazar servicios reales con mocks
+                    // Replace real services with mocks
                     services.AddSingleton<IS3Service>(_mockS3Service);
                 });
 
-                // Configurar logging
+                // Configure logging
                 builder.ConfigureLogging(logging =>
                 {
                     logging.ClearProviders();
@@ -71,10 +71,10 @@ public abstract class IntegrationTestBase : IDisposable
                 });
             });
 
-        // Crear cliente HTTP
+        // Create HTTP client
         Client = Factory.CreateClient();
 
-        // Configurar servicios para pruebas unitarias
+        // Configure services for unit testing
         var services = new ServiceCollection();
         _loggerFactory = LoggerFactory.Create(builder =>
         {
@@ -82,30 +82,30 @@ public abstract class IntegrationTestBase : IDisposable
             builder.SetMinimumLevel(LogLevel.Debug);
         });
 
-        // Configurar MongoDBService
+        // Configure MongoDBService
         var mongoDBSettings = new MongoDBSettings
         {
             ConnectionString = _mongoDbRunner.ConnectionString,
             DatabaseName = "TestDB"
         };
 
-        // Registrar las opciones
+        // Register the options
         services.Configure<MongoDBSettings>(options =>
         {
             options.ConnectionString = mongoDBSettings.ConnectionString;
             options.DatabaseName = mongoDBSettings.DatabaseName;
         });
 
-        // Crear el servicio MongoDBService usando el service provider
+        // Create the MongoDBService using the service provider
         var serviceProvider = services.BuildServiceProvider();
         var options = serviceProvider.GetRequiredService<IOptions<MongoDBSettings>>();
         _mongoDBService = new MongoDBService(options);
         services.AddSingleton(_mongoDBService);
 
-        // Registrar el mock de S3Service
+        // Register the S3Service mock
         services.AddSingleton<IS3Service>(_mockS3Service);
 
-        // Configurar el ServiceProvider
+        // Configure the ServiceProvider
         _serviceProvider = services.BuildServiceProvider();
     }
 

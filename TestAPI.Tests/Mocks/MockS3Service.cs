@@ -3,7 +3,7 @@ using TestAPI.Services.Interfaces;
 using Microsoft.AspNetCore.Http;
 
 namespace TestAPI.Tests.Mocks;
-// Implementación mock de IS3Service para pruebas
+// Mock implementation of IS3Service for testing
 public class MockS3Service : IS3Service
 {
     public string PropertyImageBucketName => "property-images";

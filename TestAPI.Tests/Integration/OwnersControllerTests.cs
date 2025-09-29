@@ -166,7 +166,7 @@ public class OwnersControllerTests : IntegrationTestBase
     public async Task UpdateOwner_WithNonExistentId_ReturnsNotFound()
     {
         // Arrange
-        var nonExistentId = "507f1f77bcf86cd799439011"; // ID de MongoDB válido pero que no existe
+        var nonExistentId = "507f1f77bcf86cd799439011"; // Valid MongoDB ID that doesn't exist
         var updatedOwner = new Owner
         {
             Id = nonExistentId,
@@ -202,7 +202,7 @@ public class OwnersControllerTests : IntegrationTestBase
     public async Task DeleteOwner_WithNonExistentId_ReturnsNotFound()
     {
         // Arrange
-        var nonExistentId = "507f1f77bcf86cd799439011"; // ID de MongoDB válido pero que no existe
+        var nonExistentId = "507f1f77bcf86cd799439011"; // Valid MongoDB ID that doesn't exist
 
         // Act
         var response = await Client.DeleteAsync($"/api/owners/{nonExistentId}");
@@ -215,14 +215,14 @@ public class OwnersControllerTests : IntegrationTestBase
     public async Task GetOwnerProperties_WithValidOwnerId_ReturnsProperties()
     {
         // Arrange
-        // Crear un propietario
+        // Create an owner
         var owner = await CreateTestOwner("Propietario de Prueba");
 
-        // Crear propiedades asociadas al propietario
+        // Create properties associated with the owner
         var property1 = await CreateTestProperty("Propiedad 1", "Calle 123", owner.Id);
         var property2 = await CreateTestProperty("Propiedad 2", "Avenida 456", owner.Id);
 
-        // Crear una propiedad que no pertenece al propietario
+        // Create a property that doesn't belong to the owner
         var otherOwner = await CreateTestOwner("Otro Propietario");
         await CreateTestProperty("Otra Propiedad", "Calle 789", otherOwner.Id);
 
@@ -242,7 +242,7 @@ public class OwnersControllerTests : IntegrationTestBase
     public async Task GetOwnerProperties_WithNonExistentOwnerId_ReturnsNotFound()
     {
         // Arrange
-        var nonExistentId = "507f1f77bcf86cd799439011"; // ID de MongoDB válido pero que no existe
+        var nonExistentId = "507f1f77bcf86cd799439011"; // Valid MongoDB ID that doesn't exist
 
         // Act
         var response = await Client.GetAsync($"/api/owners/{nonExistentId}/properties");
@@ -253,6 +253,6 @@ public class OwnersControllerTests : IntegrationTestBase
         // Verify the response content is not empty and contains the expected error message
         var content = await response.Content.ReadAsStringAsync();
         Assert.That(content, Is.Not.Null.Or.Empty);
-        Assert.That(content, Does.Contain("No se encontró un propietario con ID"));
+        Assert.That(content, Does.Contain("No owner found with ID"));
     }
 }
