@@ -5,13 +5,11 @@ using Amazon.S3.Transfer;
 using Microsoft.Extensions.Options;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Processing;
-using SixLabors.ImageSharp.Formats.Jpeg;
-using TestAPI.Services.Interfaces;
 using TestAPI.Model;
 
-namespace TestAPI.Services;
+namespace TestAPI.Services.Storage;
 
-public class S3Service : IS3Service
+public class S3Service : IStorageService
 {
     public string PropertyImageBucketName { get; } = "property-images";
     public string OwnerImageBucketName { get; } = "owner-images";
@@ -110,7 +108,7 @@ public class S3Service : IS3Service
         }
     }
 
-    public async Task<IS3Service.FileUploadResult> UploadFileAsync(IFormFile file, string bucketName, string? prefix = null)
+    public async Task<IStorageService.FileUploadResult> UploadFileAsync(IFormFile file, string bucketName, string? prefix = null)
     {
         await CreateBucketIfNotExistsAsync(bucketName);
 
@@ -139,7 +137,7 @@ public class S3Service : IS3Service
             CannedACL = null
         });
 
-        var result = new IS3Service.FileUploadResult
+        var result = new IStorageService.FileUploadResult
         {
             FileKey = key,
             FileName = file.FileName,
@@ -224,7 +222,7 @@ public class S3Service : IS3Service
     {
         return $"{_serviceUrl}/{bucketName}/{fileName}";
     }
-    public async Task<IS3Service.FileUploadResult> UpdateFileAsync(string oldFileName, IFormFile newFile, string bucketName, string? prefix = null)
+    public async Task<IStorageService.FileUploadResult> UpdateFileAsync(string oldFileName, IFormFile newFile, string bucketName, string? prefix = null)
     {
         _logger.LogInformation("Starting file update. Old file: {OldFileName}", oldFileName);
 

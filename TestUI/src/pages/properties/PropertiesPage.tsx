@@ -3,7 +3,13 @@ import { useState, useCallback } from "react";
 import { useProperties } from "@/hooks/useProperties";
 import PropertyCard, { PropertyListSkeleton } from "@/components/Molecules/PropertyCard";
 import { Pagination } from "@/components/Organisms/Pagination";
-import { PropertyFilters, MIN_YEAR, MAX_YEAR, MIN_PRICE, MAX_PRICE } from "@/components/Molecules/PropertyFilters";
+import {
+  PropertyFilters,
+  MIN_YEAR,
+  MAX_YEAR,
+  MIN_PRICE,
+  MAX_PRICE,
+} from "@/components/Molecules/PropertyFilters";
 import type { PropertyFilters as PropertyFiltersType } from "@/components/Molecules/PropertyFilters";
 
 export default function PropertiesPage() {
@@ -47,16 +53,16 @@ export default function PropertiesPage() {
               Add Property
             </Link>
           </div>
-          <PropertyFilters 
-          onFilterChange={handleFilterChange} 
-          initialFilters={{
-            minPrice: metadata?.priceRange?.min ?? MIN_PRICE,
-            maxPrice: metadata?.priceRange?.max ?? MAX_PRICE,
-            minYear: metadata?.yearRange?.min ?? MIN_YEAR,
-            maxYear: metadata?.yearRange?.max ?? MAX_YEAR,
-          }}
-          isLoading={isMetadataLoading}
-        />
+          <PropertyFilters
+            onFilterChange={handleFilterChange}
+            initialFilters={{
+              minPrice: metadata?.priceRange?.min ?? MIN_PRICE,
+              maxPrice: metadata?.priceRange?.max ?? MAX_PRICE,
+              minYear: metadata?.yearRange?.min ?? MIN_YEAR,
+              maxYear: metadata?.yearRange?.max ?? MAX_YEAR,
+            }}
+            isLoading={isMetadataLoading}
+          />
         </div>
         <div className="p-4 text-red-500">Error loading properties: {error.message}</div>
       </div>
@@ -75,8 +81,8 @@ export default function PropertiesPage() {
             Add Property
           </Link>
         </div>
-        <PropertyFilters 
-          onFilterChange={handleFilterChange} 
+        <PropertyFilters
+          onFilterChange={handleFilterChange}
           initialFilters={{
             minPrice: metadata?.priceRange?.min ?? MIN_PRICE,
             maxPrice: metadata?.priceRange?.max ?? MAX_PRICE,
@@ -92,7 +98,9 @@ export default function PropertiesPage() {
       ) : (
         <div className="grid grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 mb-6 auto-rows-fr">
           {properties?.data?.map((property: any) => (
-            <PropertyCard property={property} />
+            <Link to={`/properties/${property.id}`}>
+              <PropertyCard property={property} />
+            </Link>
           ))}
         </div>
       )}

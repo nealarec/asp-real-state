@@ -38,12 +38,6 @@ function getRandomImageUrl(width = 800, height = 600): string {
   return `https://picsum.photos/${width}/${height}?random=${randomId}`;
 }
 
-// Get a fallback image URL in case the primary service fails
-function getFallbackImageUrl(width = 800, height = 600): string {
-  // Using placeholder.com as a fallback
-  return `https://via.placeholder.com/${width}x${height}.jpg?text=Property+Image`;
-}
-
 // Upload a file to the server from a stream with retry and fallback
 async function uploadImageFromUrl(
   url: string,
@@ -60,7 +54,6 @@ async function uploadImageFromUrl(
     // If this is a retry and we have a fallback URL, use it
     if (attempt > 0) {
       console.log(`Retry ${attempt} for ${url}`);
-      currentUrl = getFallbackImageUrl();
     }
 
     try {

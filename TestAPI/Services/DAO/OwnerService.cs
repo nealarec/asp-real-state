@@ -1,24 +1,24 @@
 using MongoDB.Driver;
 using TestAPI.Model;
 using TestAPI.Model.Responses;
-using TestAPI.Services.Interfaces;
+using TestAPI.Services.Storage;
 
 namespace TestAPI.Services.DAO;
 
 public class OwnerService : BaseService<Owner>
 {
-    private readonly IS3Service _s3Service;
+    private readonly IStorageService _storageService;
     private const string BucketName = "owner-images";
     private readonly ILogger<OwnerService> _logger;
 
-    public OwnerService(MongoDBService mongoDB, IS3Service s3Service, ILogger<OwnerService> logger)
+    public OwnerService(MongoDBService mongoDB, IStorageService storageService, ILogger<OwnerService> logger)
         : base(mongoDB.GetCollection<Owner>("owners"))
     {
-        _s3Service = s3Service;
+        _storageService = storageService;
         _logger = logger;
 
         // Create text index for name searches
-        var indexKeys = Builders<Owner>.IndexKeys.Text(x => x.Name);
+        var indexKeys = Builders<Owner>.IndexKeys.Ascending(x => x.Name);
         _collection.Indexes.CreateOne(new CreateIndexModel<Owner>(indexKeys));
     }
 
@@ -63,7 +63,7 @@ public class OwnerService : BaseService<Owner>
         {
             try
             {
-                owner.Photo = _s3Service.GetPublicFileUrl(owner.Photo, BucketName);
+                owner.Photo = _storageService.GetPublicFileUrl(owner.Photo, BucketName);
             }
             catch (Exception ex)
             {

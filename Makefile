@@ -9,7 +9,7 @@ LOCATION=brazilsouth
 
 APP_NAME=test-app-$(APP_ID)
 COSMOS_NAME=test-mongodb-$(APP_ID)
-STORAGE_NAME=teststorage$(APP_ID)   # nombres de storage deben ser globalmente únicos
+STORAGE_NAME=teststorage$(APP_ID)
 
 .PHONY: check-az login provision frontend backend publish deploy config test clean
 
@@ -76,14 +76,14 @@ publish: frontend backend
 	dotnet publish $(BACKEND_DIR) -c Release -o $(PUBLISH_DIR)
 
 deploy: check-az provision publish config
-	zip -r app.zip $(PUBLISH_DIR)/*
+	cd $(PUBLISH_DIR) && zip -r ../app.zip . && cd ..
 	az webapp deploy --resource-group $(RESOURCE_GROUP) --name $(APP_NAME) --src-path app.zip
 	@echo "✅ Deploy completado en Azure App Service: $(APP_NAME).azurewebsites.net"
 
 config:
 	@echo "🔧 Configurando App Settings..."
 	$(eval MONGO_URI := $(shell az cosmosdb keys list --name $(COSMOS_NAME) --resource-group $(RESOURCE_GROUP) --type connection-strings --query "connectionStrings[0].connectionString" -o tsv))
-	$(eval STORAGE_KEY := $(shell az storage account keys list --account-name $(STORAGE_NAME) --resource-group $(RESOURCE_GROUP) --query "[0].value" -o tsv))
+	$(eval CONN_STRING := $(shell az storage account show-connection-string --name $(STORAGE_NAME) --resource-group $(RESOURCE_GROUP) --query "connectionString" -o tsv))
 
 	az webapp config appsettings set \
 	  --name $(APP_NAME) \
@@ -91,10 +91,10 @@ config:
 	  --settings \
 	  MongoDBSettings__ConnectionString="$(MONGO_URI)" \
 	  MongoDBSettings__DatabaseName="RealEstateDB" \
-	  S3Settings__ServiceURL="https://$(STORAGE_NAME).blob.core.windows.net" \
-	  S3Settings__AccessKey="$(STORAGE_NAME)" \
-	  S3Settings__SecretKey="$(STORAGE_KEY)" \
-	  S3Settings__Region="eastus"
+	  Storage__UseAzureBlob=true \
+	  AzureBlobSettings__ConnectionString="$(CONN_STRING)" \
+	  AzureBlobSettings__ServiceUrl="https://$(STORAGE_NAME).blob.core.windows.net" \
+	  AzureBlobSettings__PublicBaseUrl="https://$(STORAGE_NAME).blob.core.windows.net"
 
 	@echo "✅ App settings actualizados en Azure"
 

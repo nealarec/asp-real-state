@@ -15,7 +15,7 @@ using TestAPI.Data;
 using TestAPI.Model;
 using TestAPI.Services;
 using TestAPI.Services.DAO;
-using TestAPI.Services.Interfaces;
+using TestAPI.Services.IStorageService;
 using TestAPI.Tests.Mocks;
 
 namespace TestAPI.Tests.Integration;
@@ -27,7 +27,7 @@ public abstract class IntegrationTestBase : IDisposable
     protected readonly IServiceProvider _serviceProvider;
     protected readonly ILoggerFactory _loggerFactory;
     protected readonly MongoDBService _mongoDBService;
-    protected readonly IS3Service _mockS3Service;
+    protected readonly IStorageService _mockStorageService;
     protected readonly IConfiguration _configuration;
     protected WebApplicationFactory<Program> Factory { get; private set; }
     protected HttpClient Client { get; private set; }
@@ -41,8 +41,8 @@ public abstract class IntegrationTestBase : IDisposable
         var mongoClient = new MongoClient(_mongoDbRunner.ConnectionString);
         _database = mongoClient.GetDatabase("TestDB");
 
-        // Create the S3Service mock
-        _mockS3Service = new MockS3Service();
+        // Create the StorageService mock
+        _mockStorageService = new MockStorageService();
 
         // Configure WebApplicationFactory
         Factory = new WebApplicationFactory<Program>()
@@ -59,7 +59,7 @@ public abstract class IntegrationTestBase : IDisposable
                     });
 
                     // Replace real services with mocks
-                    services.AddSingleton<IS3Service>(_mockS3Service);
+                    services.AddSingleton<IStorageService>(_mockStorageService);
                 });
 
                 // Configure logging
@@ -102,8 +102,8 @@ public abstract class IntegrationTestBase : IDisposable
         _mongoDBService = new MongoDBService(options);
         services.AddSingleton(_mongoDBService);
 
-        // Register the S3Service mock
-        services.AddSingleton<IS3Service>(_mockS3Service);
+        // Register the StorageService mock
+        services.AddSingleton<IStorageService>(_mockStorageService);
 
         // Configure the ServiceProvider
         _serviceProvider = services.BuildServiceProvider();
@@ -112,13 +112,13 @@ public abstract class IntegrationTestBase : IDisposable
     protected OwnerService CreateOwnerService()
     {
         var logger = _loggerFactory.CreateLogger<OwnerService>();
-        return new OwnerService(_mongoDBService, _mockS3Service, logger);
+        return new OwnerService(_mongoDBService, _mockStorageService, logger);
     }
 
     protected PropertyService CreatePropertyService()
     {
         var logger = _loggerFactory.CreateLogger<PropertyService>();
-        return new PropertyService(_mongoDBService, CreateOwnerService(), CreatePropertyImageService(), _mockS3Service, logger);
+        return new PropertyService(_mongoDBService, CreateOwnerService(), CreatePropertyImageService(), _mockStorageService, logger);
     }
 
     protected PropertyImageService CreatePropertyImageService()

@@ -4,7 +4,7 @@ using MongoDB.Driver;
 using TestAPI.Model;
 using TestAPI.Model.Responses;
 using TestAPI.Services.DAO;
-using TestAPI.Services.Interfaces;
+using TestAPI.Services.Storage;
 using TestAPI.Utils;
 
 namespace TestAPI.Controller;
@@ -12,7 +12,7 @@ namespace TestAPI.Controller;
 [Route("api/[controller]")]
 public class OwnersController : ResourceController<Owner, OwnerService>
 {
-    private readonly IS3Service _s3Service;
+    private readonly IStorageService _storageService;
     private readonly PropertyService _propertyService;
     private const string BucketName = "owner-images";
 
@@ -20,10 +20,10 @@ public class OwnersController : ResourceController<Owner, OwnerService>
         OwnerService ownerService,
         PropertyService propertyService,
         ILogger<OwnersController> logger,
-        IS3Service s3Service)
+        IStorageService storageService)
         : base(ownerService, logger, "owner")
     {
-        _s3Service = s3Service;
+        _storageService = storageService;
         _propertyService = propertyService;
     }
 
@@ -151,7 +151,7 @@ public class OwnersController : ResourceController<Owner, OwnerService>
             {
                 try
                 {
-                    await _s3Service.DeleteFileAsync(owner.Photo, BucketName);
+                    await _storageService.DeleteFileAsync(owner.Photo, BucketName);
                 }
                 catch (Exception ex)
                 {
@@ -162,14 +162,14 @@ public class OwnersController : ResourceController<Owner, OwnerService>
 
             // Upload the new image
             var prefix = $"owners/{id}";
-            var uploadResult = await _s3Service.UploadFileAsync(file, BucketName, prefix);
+            var uploadResult = await _storageService.UploadFileAsync(file, BucketName, prefix);
 
             // Update the photo reference in the owner
             owner.Photo = uploadResult.FileKey;
             await _service.UpdateAsync(id, owner);
 
             // Return the photo URL
-            var photoUrl = _s3Service.GetPublicFileUrl(uploadResult.FileKey, BucketName);
+            var photoUrl = _storageService.GetPublicFileUrl(uploadResult.FileKey, BucketName);
 
             return Ok(new
             {

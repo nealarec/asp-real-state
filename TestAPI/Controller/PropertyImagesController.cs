@@ -5,7 +5,7 @@ using MongoDB.Driver;
 using System.IO;
 using TestAPI.Model;
 using TestAPI.Services.DAO;
-using TestAPI.Services.Interfaces;
+using TestAPI.Services.Storage;
 
 namespace TestAPI.Controller;
 
@@ -17,18 +17,18 @@ namespace TestAPI.Controller;
 public class PropertyImagesController : ResourceController<PropertyImage, PropertyImageService>
 {
     private readonly PropertyService _propertyService;
-    private readonly IS3Service _s3Service;
+    private readonly IStorageService _storageService;
     private const string BucketName = "property-images";
 
     public PropertyImagesController(
         PropertyImageService imageService,
         PropertyService propertyService,
-        IS3Service s3Service,
+        IStorageService storageService,
         ILogger<PropertyImagesController> logger)
         : base(imageService, logger, "property image")
     {
         _propertyService = propertyService;
-        _s3Service = s3Service;
+        _storageService = storageService;
     }
 
     /// <summary>
@@ -73,7 +73,7 @@ public class PropertyImagesController : ResourceController<PropertyImage, Proper
                 image.Id,
                 image.IdProperty,
                 image.Enabled,
-                FileUrl = _s3Service.GetPublicFileUrl(image.File, BucketName),
+                FileUrl = _storageService.GetPublicFileUrl(image.File, BucketName),
                 FileName = Path.GetFileName(image.File),
                 FileKey = image.File
             });
@@ -116,11 +116,11 @@ public class PropertyImagesController : ResourceController<PropertyImage, Proper
                 return NotFound($"No se encontró la imagen con ID: {id} para la propiedad especificada");
 
             // Obtener las URLs públicas
-            var fileUrl = _s3Service.GetPublicFileUrl(image.File, BucketName);
+            var fileUrl = _storageService.GetPublicFileUrl(image.File, BucketName);
             string? thumbnailUrl = null;
             if (!string.IsNullOrEmpty(image.Thumbnail))
             {
-                thumbnailUrl = _s3Service.GetPublicFileUrl(image.Thumbnail, BucketName);
+                thumbnailUrl = _storageService.GetPublicFileUrl(image.Thumbnail, BucketName);
             }
 
             // Devolver la imagen con las URLs completas
@@ -168,22 +168,17 @@ public class PropertyImagesController : ResourceController<PropertyImage, Proper
             if (property == null)
                 return NotFound($"Property with ID {propertyId} not found");
 
-            // Generate a unique file name
-            var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
-            var fileKey = $"properties/{propertyId}/{fileName}";
-
-            // Upload the file to S3
-            using (var stream = file.OpenReadStream())
-            {
-                await _s3Service.UploadFileAsync(file, fileKey, BucketName);
-            }
+            // Upload the new image
+            var prefix = $"properties/{propertyId}";
+            var uploadResult = await _storageService.UploadFileAsync(file, BucketName, prefix);
 
             // Create the image record
             var image = new PropertyImage
             {
                 Id = ObjectId.GenerateNewId().ToString(),
                 IdProperty = propertyId,
-                File = fileKey,
+                File = uploadResult.FileKey,
+                Thumbnail = uploadResult.ThumbnailKey,
                 Enabled = true
             };
 
@@ -191,7 +186,7 @@ public class PropertyImagesController : ResourceController<PropertyImage, Proper
             var createdImage = await _service.CreateAsync(image);
 
             // Generate public URL
-            var imageUrl = _s3Service.GetPublicFileUrl(fileKey, BucketName);
+            var imageUrl = _storageService.GetPublicFileUrl(prefix, BucketName);
 
             return CreatedAtAction(nameof(GetById), new { propertyId, id = createdImage.Id }, createdImage);
         }
@@ -227,7 +222,7 @@ public class PropertyImagesController : ResourceController<PropertyImage, Proper
             // Delete file from S3
             try
             {
-                await _s3Service.DeleteFileAsync(image.File, BucketName);
+                await _storageService.DeleteFileAsync(image.File, BucketName);
             }
             catch (Exception ex)
             {

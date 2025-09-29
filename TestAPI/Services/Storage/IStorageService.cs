@@ -1,9 +1,9 @@
 using Amazon.S3.Model;
 using Microsoft.AspNetCore.Http;
 
-namespace TestAPI.Services.Interfaces;
+namespace TestAPI.Services.Storage;
 
-public interface IS3Service
+public interface IStorageService
 {
     string PropertyImageBucketName { get; }
     string OwnerImageBucketName { get; }

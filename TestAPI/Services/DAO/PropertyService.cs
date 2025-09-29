@@ -2,7 +2,7 @@ using MongoDB.Bson;
 using MongoDB.Driver;
 using TestAPI.Model;
 using TestAPI.Model.Responses;
-using TestAPI.Services.Interfaces;
+using TestAPI.Services.Storage;
 
 namespace TestAPI.Services.DAO;
 
@@ -10,20 +10,20 @@ public class PropertyService : BaseService<Property>
 {
     private readonly OwnerService _ownerService;
     private readonly PropertyImageService _imgService;
-    private readonly IS3Service _s3Service;
+    private readonly IStorageService _storageService;
     private readonly ILogger<PropertyService> _logger;
 
     public PropertyService(
         MongoDBService mongoDB,
         OwnerService ownerService,
         PropertyImageService propertyImageService,
-        IS3Service s3Service,
+        IStorageService storageService,
         ILogger<PropertyService> logger)
         : base(mongoDB.GetCollection<Property>("properties"))
     {
         _ownerService = ownerService;
         _imgService = propertyImageService;
-        _s3Service = s3Service;
+        _storageService = storageService;
         _logger = logger;
 
         // Create indexes for common searches
@@ -137,7 +137,7 @@ public class PropertyService : BaseService<Property>
                 return string.Empty;
             }
 
-            return _s3Service.GetPublicFileUrl(image.File, _s3Service.PropertyImageBucketName);
+            return _storageService.GetPublicFileUrl(image.File, _storageService.PropertyImageBucketName);
         }
         catch
         {

@@ -1,17 +1,17 @@
 
-using TestAPI.Services.Interfaces;
+using TestAPI.Services.Storage;
 using Microsoft.AspNetCore.Http;
 
 namespace TestAPI.Tests.Mocks;
-// Mock implementation of IS3Service for testing
-public class MockS3Service : IS3Service
+// Mock implementation of IStorageService for testing
+public class MockStorageService : IStorageService
 {
     public string PropertyImageBucketName => "property-images";
     public string OwnerImageBucketName => "owner-images";
 
-    public Task<IS3Service.FileUploadResult> UploadFileAsync(IFormFile file, string bucketName, string? prefix = null)
+    public Task<StorageService.FileUploadResult> UploadFileAsync(IFormFile file, string bucketName, string? prefix = null)
     {
-        return Task.FromResult(new IS3Service.FileUploadResult
+        return Task.FromResult(new StorageService.FileUploadResult
         {
             FileKey = $"{prefix}/{file.FileName}",
             FileName = file.FileName,
@@ -53,9 +53,9 @@ public class MockS3Service : IS3Service
         return $"https://public-mock-s3-url.com/{bucketName}/{fileName}";
     }
 
-    public Task<IS3Service.FileUploadResult> UpdateFileAsync(string oldFileName, IFormFile newFile, string bucketName, string? prefix = null)
+    public Task<IStorageService.FileUploadResult> UpdateFileAsync(string oldFileName, IFormFile newFile, string bucketName, string? prefix = null)
     {
-        return Task.FromResult(new IS3Service.FileUploadResult
+        return Task.FromResult(new IStorageService.FileUploadResult
         {
             FileKey = $"{prefix}/{newFile.FileName}",
             FileName = newFile.FileName,
