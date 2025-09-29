@@ -1,21 +1,13 @@
-import type { Property } from "@/schemas/Property";
-import { useQuery } from "@tanstack/react-query";
 import { useParams, Link } from "react-router-dom";
 import placeholderImage from "@/assets/house-placeholder.svg";
 import { PropertyImageGallery } from "@/components/Molecules/PropertyImageGallery";
 import { usePropertyImages } from "@/hooks/usePropertyImages";
+import { useProperties } from "@/hooks/useProperties";
 
 export default function PropertyDetailPage() {
   const { id = "" } = useParams<{ id: string }>();
 
-  const {
-    data: property,
-    isLoading,
-    error,
-  } = useQuery<Property | undefined>({
-    queryKey: ["property", id],
-    queryFn: () => fetch(`/api/properties/${id}`).then(res => res.json()),
-  });
+  const { data: property, isLoading, error } = useProperties().getProperty(id);
 
   const { data: images = [], isLoading: isLoadingImages } = usePropertyImages(id);
   if (isLoading) return <div className="p-4">Loading property...</div>;

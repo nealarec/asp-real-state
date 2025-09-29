@@ -1,21 +1,13 @@
-import { useQuery } from "@tanstack/react-query";
 import { useParams, Link } from "react-router-dom";
 import PropertyCard from "../../components/Molecules/PropertyCard";
-import type { Owner } from "@/schemas/Owner";
-import type { Property } from "@/schemas/Property";
+import { useOwners } from "@/hooks/useOwners";
 
 export default function OwnerDetailPage() {
   const { id } = useParams<{ id: string }>();
 
-  const { data: owner, isLoading: isLoadingOwner } = useQuery<Owner>({
-    queryKey: ["owner", id],
-    queryFn: () => fetch(`/api/owners/${id}`).then(res => res.json()),
-  });
-
-  const { data: properties, isLoading: isLoadingProperties } = useQuery<Property[]>({
-    queryKey: ["owner-properties", id],
-    queryFn: () => fetch(`/api/owners/${id}/properties`).then(res => res.json()),
-  });
+  const { getOwner, getOwnerProperties } = useOwners();
+  const { data: owner, isLoading: isLoadingOwner } = getOwner(id || "");
+  const { data: properties, isLoading: isLoadingProperties } = getOwnerProperties(id || "");
 
   if (isLoadingOwner) return <div>Loading owner information...</div>;
   if (!owner) return <div>Owner not found</div>;

@@ -1,23 +1,17 @@
-import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import PropertyCard from "../../components/Molecules/PropertyCard";
-import type { Property } from "@/schemas/Property";
+import { useProperties } from "@/hooks/useProperties";
+import { Skeleton } from "@/components/Atoms/Skeleton";
+import PropertyCard, { PropertyListSkeleton } from "@/components/Molecules/PropertyCard";
 
 export default function PropertiesPage() {
-  const {
-    data: properties,
-    isLoading,
-    error,
-  } = useQuery<Property[]>({
-    queryKey: ["properties"],
-    queryFn: () => fetch("/api/properties").then(res => res.json()),
-  });
+  const { properties, isLoading, error } = useProperties();
 
-  if (isLoading) return <div>Loading properties...</div>;
-  if (error) return <div>Error loading properties</div>;
+  if (isLoading) return <PropertiesSkeleton />;
+  if (error)
+    return <div className="p-4 text-red-500">Error loading properties: {error.message}</div>;
 
   return (
-    <div className="p-4">
+    <div className="container mx-auto p-4">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Properties</h1>
         <Link
@@ -30,11 +24,23 @@ export default function PropertiesPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4">
         {properties?.map(property => (
-          <Link key={property.id} to={`/properties/${property.id}`}>
+          <Link key={property.id} to={`/properties/${property.id}`} className="block">
             <PropertyCard property={property} />
           </Link>
         ))}
       </div>
+    </div>
+  );
+}
+
+function PropertiesSkeleton() {
+  return (
+    <div className="container mx-auto p-4">
+      <div className="flex justify-between items-center mb-6">
+        <Skeleton className="h-8 w-48" />
+        <Skeleton className="h-10 w-32" />
+      </div>
+      <PropertyListSkeleton />
     </div>
   );
 }
