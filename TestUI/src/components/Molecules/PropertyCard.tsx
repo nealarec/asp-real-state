@@ -11,8 +11,8 @@ export default function PropertyCard({ property }: { property: Property }) {
   }, [property.coverImageUrl]);
 
   return (
-    <div className="border rounded-lg overflow-hidden shadow-sm flex flex-col sm:flex-row h-32 bg-white hover:shadow-md transition-shadow">
-      <div className="w-full sm:w-1/4 h-full bg-gray-100 flex-shrink-0 overflow-hidden">
+    <div className="border rounded-lg overflow-hidden shadow-sm flex h-full flex-col sm:flex-row bg-white hover:shadow-md transition-shadow">
+      <div className="w-full h-1/2 sm:w-1/4 sm:h-full bg-gray-100 flex-shrink-0 overflow-hidden">
         <img
           src={showPlaceholder ? housePlaceholder : property.coverImageUrl}
           alt="Property placeholder"

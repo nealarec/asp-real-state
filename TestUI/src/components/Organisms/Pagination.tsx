@@ -16,20 +16,26 @@ const PaginationItem = ({
   disabled = false,
   onClick,
   children,
+  className = "",
+  isArrow = false,
 }: {
   page: number;
   active: boolean;
   disabled?: boolean;
   onClick: (page: number) => void;
   children: React.ReactNode;
+  className?: string;
+  isArrow?: boolean;
 }) => (
-  <li className={`page-item ${active ? "active" : ""} ${disabled ? "disabled" : ""}`}>
+  <li className={`${active ? "active" : ""} ${disabled ? "disabled" : ""}`}>
     <button
-      className={`px-3 py-1.5 mx-0.5 min-w-[38px] text-center rounded-md border transition-colors ${
+      className={`px-2 py-1 text-sm sm:px-3 sm:py-1.5 md:mx-0.5 min-w-[32px] sm:min-w-[38px] text-center rounded border transition-all ${
         active
           ? "bg-blue-600 border-blue-600 text-white"
           : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-      } ${disabled ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-100"}`}
+      } ${disabled ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-100"} ${
+        isArrow ? "h-full flex items-center justify-center" : ""
+      } ${className}`}
       onClick={() => !disabled && onClick(page)}
       disabled={disabled}
       aria-current={active ? "page" : undefined}
@@ -89,8 +95,8 @@ export function Pagination({
 
   return (
     <div className={`${className} w-full`}>
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="text-sm text-gray-600 whitespace-nowrap">
+      <div className="fixed bottom-0 left-0 right-0 sm:relative bg-white pb-4 pt-2 sm:pb-2 p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="hidden sm:block text-sm text-gray-600 whitespace-nowrap">
           Showing{" "}
           <span className="font-medium">
             {Math.min((currentPage - 1) * pageSize + 1, totalItems)}
@@ -99,17 +105,21 @@ export function Pagination({
           <span className="font-medium">{totalItems}</span> results
         </div>
 
-        <nav aria-label="Page navigation" className="w-full sm:w-auto">
-          <ul className="flex items-center justify-center sm:justify-end gap-1">
-            <PaginationItem
-              page={currentPage - 1}
-              active={false}
-              disabled={currentPage === 1}
-              onClick={handlePageChange}
-            >
-              <span className="sr-only">Previous</span>
-              <FiChevronLeft className="h-4 w-4" />
-            </PaginationItem>
+        <nav aria-label="Page navigation" className="w-auto pb-3 sm:pb-0">
+          <ul className="flex items-center gap-0.5 sm:gap-1">
+            <div className="h-full flex items-center">
+              <PaginationItem
+                page={currentPage - 1}
+                active={false}
+                disabled={currentPage === 1}
+                onClick={handlePageChange}
+                className="px-2 h-full"
+                isArrow={true}
+              >
+                <span className="sr-only">Previous</span>
+                <FiChevronLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              </PaginationItem>
+            </div>
 
             {showFirstPage && (
               <PaginationItem page={1} active={false} onClick={handlePageChange}>
@@ -151,9 +161,11 @@ export function Pagination({
               active={false}
               disabled={currentPage >= totalPages}
               onClick={handlePageChange}
+              className="px-2 h-full"
+              isArrow={true}
             >
               <span className="sr-only">Next</span>
-              <FiChevronRight className="h-4 w-4" />
+              <FiChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             </PaginationItem>
           </ul>
         </nav>

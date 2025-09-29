@@ -1,5 +1,5 @@
 import { useParams, Link } from "react-router-dom";
-import PropertyCard from "../../components/Molecules/PropertyCard";
+import PropertyCard, { PropertyListSkeleton } from "../../components/Molecules/PropertyCard";
 import { useOwners } from "@/hooks/useOwners";
 
 export default function OwnerDetailPage() {
@@ -21,25 +21,23 @@ export default function OwnerDetailPage() {
       <div className="bg-white p-6 rounded-lg shadow-md mb-6">
         <h1 className="text-2xl font-bold mb-2">{owner.name}</h1>
         <p className="text-gray-600">{owner.address}</p>
-
-        <div className="mt-6">
-          <h2 className="text-xl font-semibold mb-4">Properties</h2>
-
-          {isLoadingProperties ? (
-            <p>Loading properties...</p>
-          ) : properties && properties.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {properties.map(property => (
-                <Link key={property.id} to={`/properties/${property.id}`}>
-                  <PropertyCard property={property} />
-                </Link>
-              ))}
-            </div>
-          ) : (
-            <p>This owner has no registered properties.</p>
-          )}
-        </div>
       </div>
+      <div className="mt-6">
+        <h2 className="text-xl font-semibold mb-4">Properties</h2>
+      </div>
+      {isLoadingProperties ? (
+        <PropertyListSkeleton count={6} />
+      ) : properties && properties.length > 0 ? (
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+          {properties.map(property => (
+            <Link key={property.id} to={`/properties/${property.id}`}>
+              <PropertyCard property={property} />
+            </Link>
+          ))}
+        </div>
+      ) : (
+        <p>This owner has no registered properties.</p>
+      )}
     </div>
   );
 }
