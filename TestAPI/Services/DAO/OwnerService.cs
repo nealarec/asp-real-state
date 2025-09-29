@@ -43,6 +43,19 @@ public class OwnerService : BaseService<Owner>
     }
 
 
+
+    public override async Task<PaginatedResponse<Owner>> GetPaginatedAsync(
+        int page = 1,
+        int pageSize = 10,
+        FilterDefinition<Owner>? filter = null,
+        SortDefinition<Owner>? sort = null)
+    {
+        var owners = await base.GetPaginatedAsync(page, pageSize, filter, sort);
+        foreach (var owner in owners.Data) UpdatePhotoUrl(owner);
+        return owners;
+    }
+
+
     private Owner UpdatePhotoUrl(Owner owner)
     {
         if (!string.IsNullOrEmpty(owner.Photo))

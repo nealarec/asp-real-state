@@ -45,6 +45,56 @@ where T : class, IEntity
         }
     }
 
+
+    /// <summary>
+    /// Obtiene todos los recursos con paginación y filtrado opcional
+    /// </summary>
+    /// <param name="page">Número de página (por defecto: 1)</param>
+    /// <param name="pageSize">Tamaño de página (por defecto: 10)</param>
+    /// <param name="filter">Filtro opcional</param>
+    /// <param name="sortField">Campo por el que ordenar</param>
+    /// <param name="sortOrder">Orden de clasificación (asc/desc)</param>
+    /// <returns>Lista paginada de recursos</returns>
+    protected virtual async Task<ActionResult<PaginatedResponse<T>>> GetAllAsync(
+        int page = 1,
+        int pageSize = 10,
+        FilterDefinition<T>? filter = null,
+        string? sortField = null,
+        string? sortOrder = "asc")
+    {
+        try
+        {
+            if (page < 1) page = 1;
+            if (pageSize < 1 || pageSize > 100) pageSize = 10;
+
+            // Construir la definición de ordenación si se proporciona un campo
+            SortDefinition<T>? sort = null;
+            if (!string.IsNullOrEmpty(sortField))
+            {
+                var sortBuilder = Builders<T>.Sort;
+                sort = sortOrder?.ToLower() == "desc"
+                    ? sortBuilder.Descending(sortField)
+                    : sortBuilder.Ascending(sortField);
+            }
+
+            var result = await _service.GetPaginatedAsync(page, pageSize, filter, sort);
+
+            // Agregar encabezados para la paginación
+            Response.Headers["X-Total-Count"] = result.TotalCount.ToString();
+            Response.Headers["X-Page"] = result.Page.ToString();
+            Response.Headers["X-Page-Size"] = result.PageSize.ToString();
+            Response.Headers["X-Total-Pages"] = result.TotalPages.ToString();
+
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"Error al obtener los {_resourceName}");
+            return StatusCode(500, $"Error interno del servidor al obtener los {_resourceName}");
+        }
+    }
+
+
     /// <summary>
     /// Obtiene un recurso por su ID
     /// </summary>

@@ -12,6 +12,36 @@ public abstract class BaseService<T> where T : class, IEntity
         _collection = collection;
     }
 
+    public virtual async Task<PaginatedResponse<T>> GetPaginatedAsync(
+        int page = 1, 
+        int pageSize = 10, 
+        FilterDefinition<T>? filter = null, 
+        SortDefinition<T>? sort = null)
+    {
+        var query = filter == null 
+            ? _collection.Find(_ => true) 
+            : _collection.Find(filter);
+
+        if (sort != null)
+        {
+            query = query.Sort(sort);
+        }
+
+        var totalCount = await query.CountDocumentsAsync();
+        var items = await query
+            .Skip((page - 1) * pageSize)
+            .Limit(pageSize)
+            .ToListAsync();
+
+        return new PaginatedResponse<T>
+        {
+            Data = items,
+            Page = page,
+            PageSize = pageSize,
+            TotalCount = (int)totalCount
+        };
+    }
+
     public virtual async Task<List<T>> GetAsync() =>
         await _collection.Find(_ => true).ToListAsync();
 

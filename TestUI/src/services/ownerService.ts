@@ -1,18 +1,24 @@
 import type { Owner } from "@/schemas/Owner";
+import type { PaginatedResponse, PaginationParams } from "@/schemas/Pagination";
 import type { Property } from "@/schemas/Property";
+import { buildUrl } from "@/lib/utils";
 
-const API_BASE_URL = import.meta.env["VITE_API_BASE_URL"] || "/api";
+export const getOwners = async (params?: PaginationParams): Promise<PaginatedResponse<Owner>> => {
+  const url = buildUrl("/owners", params);
 
-export const getOwners = async (): Promise<Owner[]> => {
-  const response = await fetch(`${API_BASE_URL}/owners`);
+  const response = await fetch(url.toString());
   if (!response.ok) {
-    throw new Error("Error getting owners");
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.message || "Error getting owners");
   }
-  return response.json();
+
+  const data: PaginatedResponse<Owner> = await response.json();
+
+  return data;
 };
 
 export const getOwnerById = async (id: string): Promise<Owner> => {
-  const response = await fetch(`${API_BASE_URL}/owners/${id}`);
+  const response = await fetch(buildUrl(`/owners/${id}`));
   if (!response.ok) {
     throw new Error("Error getting owner");
   }
@@ -20,7 +26,7 @@ export const getOwnerById = async (id: string): Promise<Owner> => {
 };
 
 export const getOwnerProperties = async (id: string): Promise<Property[]> => {
-  const response = await fetch(`${API_BASE_URL}/owners/${id}/properties`);
+  const response = await fetch(buildUrl(`/owners/${id}/properties`));
   if (!response.ok) {
     throw new Error("Error getting owner properties");
   }
@@ -28,7 +34,7 @@ export const getOwnerProperties = async (id: string): Promise<Property[]> => {
 };
 
 export const createOwner = async (owner: Omit<Owner, "id">): Promise<Owner> => {
-  const response = await fetch(`${API_BASE_URL}/owners`, {
+  const response = await fetch(buildUrl(`/owners`), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -45,7 +51,7 @@ export const createOwner = async (owner: Omit<Owner, "id">): Promise<Owner> => {
 };
 
 export const updateOwner = async (id: string, owner: Partial<Owner>): Promise<Owner> => {
-  const response = await fetch(`${API_BASE_URL}/owners/${id}`, {
+  const response = await fetch(buildUrl(`/owners/${id}`), {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -62,7 +68,7 @@ export const updateOwner = async (id: string, owner: Partial<Owner>): Promise<Ow
 };
 
 export const deleteOwner = async (id: string): Promise<void> => {
-  const response = await fetch(`${API_BASE_URL}/owners/${id}`, {
+  const response = await fetch(buildUrl(`/owners/${id}`), {
     method: "DELETE",
   });
 

@@ -85,6 +85,31 @@ public class PropertyService : BaseService<Property>
         return property;
     }
 
+    public override async Task<PaginatedResponse<Property>> GetPaginatedAsync(
+        int page = 1,
+        int pageSize = 10,
+        FilterDefinition<Property>? filter = null,
+        SortDefinition<Property>? sort = null)
+    {
+        var props = await base.GetPaginatedAsync(page, pageSize, filter, sort);
+
+        // Procesar cada propiedad para agregar la URL de la imagen de portada
+        foreach (var property in props.Data)
+        {
+            try
+            {
+                property.CoverImageUrl = await GetCoverImageAsync(property.Id);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener la imagen de portada para la propiedad {PropertyId}", property.Id);
+                property.CoverImageUrl = string.Empty;
+            }
+        }
+
+        return props;
+    }
+
     public async Task<Owner?> GetOwnerAsync(string id)
     {
         try

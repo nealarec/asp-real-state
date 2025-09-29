@@ -17,15 +17,23 @@ public class PropertiesController : ResourceController<Property, PropertyService
     }
 
     /// <summary>
-    /// Obtiene todas las propiedades con filtrado opcional
+    /// Obtiene todas las propiedades con paginación, ordenamiento y filtrado opcional
     /// </summary>
+    /// <param name="page">Número de página (por defecto: 1)</param>
+    /// <param name="pageSize">Tamaño de página (por defecto: 10, máximo: 100)</param>
     /// <param name="search">Texto para buscar en nombre o dirección</param>
     /// <param name="ownerId">Filtrar por ID del propietario</param>
+    /// <param name="sortBy">Campo por el que ordenar (name, address, price, year)</param>
+    /// <param name="sortOrder">Orden de clasificación (asc/desc)</param>
     [HttpGet]
-    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<Property>))]
-    public async Task<ActionResult<IEnumerable<Property>>> Get(
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(PaginatedResponse<Property>))]
+    public async Task<ActionResult<PaginatedResponse<Property>>> Get(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10,
         [FromQuery] string? search = null,
-        [FromQuery] string? ownerId = null)
+        [FromQuery] string? ownerId = null,
+        [FromQuery] string? sortBy = null,
+        [FromQuery] string sortOrder = "asc")
     {
         var filters = new List<FilterDefinition<Property>>();
 
@@ -47,7 +55,17 @@ public class PropertiesController : ResourceController<Property, PropertyService
             ? Builders<Property>.Filter.And(filters)
             : null;
 
-        return await GetAllAsync(filter);
+        // Mapear campos de ordenamiento
+        string? sortField = sortBy?.ToLower() switch
+        {
+            "name" => "Name",
+            "address" => "Address",
+            "price" => "Price",
+            "year" => "Year",
+            _ => null
+        };
+
+        return await GetAllAsync(page, pageSize, filter, sortField, sortOrder);
     }
 
     /// <summary>

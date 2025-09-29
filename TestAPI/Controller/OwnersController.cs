@@ -26,18 +26,38 @@ public class OwnersController : ResourceController<Owner, OwnerService>
     }
 
     /// <summary>
-    /// Obtiene todos los propietarios
+    /// Obtiene todos los propietarios con paginación y ordenamiento
     /// </summary>
+    /// <param name="page">Número de página (por defecto: 1)</param>
+    /// <param name="pageSize">Tamaño de página (por defecto: 10, máximo: 100)</param>
     /// <param name="search">Buscar por nombre</param>
+    /// <param name="sortBy">Campo por el que ordenar (name, birthday)</param>
+    /// <param name="sortOrder">Orden de clasificación (asc/desc)</param>
     [HttpGet]
-    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<Owner>))]
-    public async Task<ActionResult<IEnumerable<Owner>>> Get([FromQuery] string? search)
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(PaginatedResponse<Owner>))]
+    public async Task<ActionResult<PaginatedResponse<Owner>>> Get(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10,
+        [FromQuery] string? search = null,
+        [FromQuery] string? sortBy = null,
+        [FromQuery] string sortOrder = "asc")
     {
-        var filter = string.IsNullOrEmpty(search)
-            ? null
-            : Builders<Owner>.Filter.Regex("name", new BsonRegularExpression(search, "i"));
+        FilterDefinition<Owner>? filter = null;
+        
+        if (!string.IsNullOrEmpty(search))
+        {
+            filter = Builders<Owner>.Filter.Regex("Name", new BsonRegularExpression(search, "i"));
+        }
 
-        return await GetAllAsync(filter);
+        // Mapear campos de ordenamiento
+        string? sortField = sortBy?.ToLower() switch
+        {
+            "name" => "Name",
+            "birthday" => "Birthday",
+            _ => null
+        };
+
+        return await GetAllAsync(page, pageSize, filter, sortField, sortOrder);
     }
 
     /// <summary>

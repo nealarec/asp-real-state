@@ -7,17 +7,34 @@ import {
   deleteProperty,
 } from "@/services/propertyService";
 import type { Property, PropertyFormData } from "@/schemas/Property";
+import type { PaginationParams, PaginatedResponse } from "@/schemas/Pagination";
 
-export const useProperties = () => {
+interface UsePropertiesOptions extends PaginationParams {
+  enabled?: boolean;
+}
+
+export const useProperties = (options: UsePropertiesOptions = {}) => {
+  const { page = 1, pageSize = 10, search, sortBy, sortOrder, enabled = true } = options;
   const queryClient = useQueryClient();
 
-  const propertiesQuery = useQuery<Property[]>({
-    queryKey: ["properties"],
-    queryFn: getProperties,
-  });
+  const params: Record<string, string | number | undefined> = {
+    page,
+    pageSize,
+    ...(search && { search }),
+    ...(sortBy && { sortBy }),
+    ...(sortOrder && { sortOrder }),
+  };
+
+  const propertiesQuery = useQuery<PaginatedResponse<Property>>({
+    queryKey: ["properties", params],
+    queryFn: () => getProperties(params as any), // Type assertion needed due to exactOptionalPropertyTypes
+    keepPreviousData: true,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    enabled,
+  } as any); // Type assertion for keepPreviousData
 
   const propertyQuery = (id: string) =>
-    useQuery<Property>({
+    useQuery<Property, Error>({
       queryKey: ["property", id],
       queryFn: () => getPropertyById(id),
       enabled: !!id,

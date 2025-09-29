@@ -1,26 +1,38 @@
 import type { Property, PropertyFormData } from "@/schemas/Property";
 import type { PropertyImage } from "@/schemas/PropertyImage";
+import type { PaginationParams, PaginatedResponse } from "@/schemas/Pagination";
+import { buildUrl } from "@/lib/utils";
 
-const API_BASE_URL = import.meta.env["VITE_API_BASE_URL"] || "/api";
+export const getProperties = async (
+  params?: PaginationParams
+): Promise<PaginatedResponse<Property>> => {
+  const url = buildUrl("/properties", params);
+  const response = await fetch(url);
 
-export const getProperties = async (): Promise<Property[]> => {
-  const response = await fetch(`${API_BASE_URL}/properties`);
   if (!response.ok) {
-    throw new Error("Error getting properties");
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.message || "Error getting properties");
   }
-  return response.json();
+
+  const data = (await response.json()) as PaginatedResponse<Property>;
+  return data;
 };
 
 export const getPropertyById = async (id: string): Promise<Property> => {
-  const response = await fetch(`${API_BASE_URL}/properties/${id}`);
+  const url = buildUrl(`/properties/${id}`);
+  const response = await fetch(url);
+
   if (!response.ok) {
-    throw new Error("Error getting property");
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.message || "Error getting property");
   }
+
   return response.json();
 };
 
 export const createProperty = async (property: Omit<Property, "id">): Promise<Property> => {
-  const response = await fetch(`${API_BASE_URL}/properties`, {
+  const url = buildUrl("/properties");
+  const response = await fetch(url, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -29,7 +41,7 @@ export const createProperty = async (property: Omit<Property, "id">): Promise<Pr
   });
 
   if (!response.ok) {
-    const error = await response.json();
+    const error = await response.json().catch(() => ({}));
     throw new Error(error.message || "Error creating property");
   }
 
@@ -40,7 +52,8 @@ export const updateProperty = async (
   id: string,
   property: Partial<PropertyFormData>
 ): Promise<Property> => {
-  const response = await fetch(`${API_BASE_URL}/properties/${id}`, {
+  const url = buildUrl(`/properties/${id}`);
+  const response = await fetch(url, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -49,7 +62,7 @@ export const updateProperty = async (
   });
 
   if (!response.ok) {
-    const error = await response.json();
+    const error = await response.json().catch(() => ({}));
     throw new Error(error.message || "Error updating property");
   }
 
@@ -57,21 +70,23 @@ export const updateProperty = async (
 };
 
 export const deleteProperty = async (id: string): Promise<void> => {
-  const response = await fetch(`${API_BASE_URL}/properties/${id}`, {
+  const url = buildUrl(`/properties/${id}`);
+  const response = await fetch(url, {
     method: "DELETE",
   });
 
   if (!response.ok) {
-    const error = await response.json();
+    const error = await response.json().catch(() => ({}));
     throw new Error(error.message || "Error deleting property");
   }
 };
 
 export const getPropertyImages = async (propertyId: string): Promise<PropertyImage[]> => {
-  const response = await fetch(`${API_BASE_URL}/properties/${propertyId}/images`);
+  const url = buildUrl(`/properties/${propertyId}/images`);
+  const response = await fetch(url);
 
   if (!response.ok) {
-    const error = await response.json();
+    const error = await response.json().catch(() => ({}));
     throw new Error(error.message || "Error loading property images");
   }
 
@@ -82,13 +97,14 @@ export const uploadPropertyImage = async (
   propertyId: string,
   formData: FormData
 ): Promise<PropertyImage> => {
-  const response = await fetch(`${API_BASE_URL}/properties/${propertyId}/images`, {
+  const url = buildUrl(`/properties/${propertyId}/images`);
+  const response = await fetch(url, {
     method: "POST",
     body: formData,
   });
 
   if (!response.ok) {
-    const error = await response.json();
+    const error = await response.json().catch(() => ({}));
     throw new Error(error.message || "Error uploading image");
   }
 
@@ -96,12 +112,13 @@ export const uploadPropertyImage = async (
 };
 
 export const deletePropertyImage = async (propertyId: string, imageId: string): Promise<void> => {
-  const response = await fetch(`${API_BASE_URL}/properties/${propertyId}/images/${imageId}`, {
+  const url = buildUrl(`/properties/${propertyId}/images/${imageId}`);
+  const response = await fetch(url, {
     method: "DELETE",
   });
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || "Error al eliminar la imagen");
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.message || "Error deleting image");
   }
 };

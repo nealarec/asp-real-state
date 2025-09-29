@@ -1,5 +1,4 @@
 import React from "react";
-import { ImageGrid } from "../Molecules/Image/ImageGrid";
 import { ImageDropzone } from "@/components/Atoms/Image/ImageDropzone";
 import { DeleteConfirmation } from "../Molecules/DeleteConfirmation/DeleteConfirmation";
 import type { PropertyImage } from "@/schemas/PropertyImage";
