@@ -14,15 +14,13 @@ interface UsePropertiesOptions extends PaginationParams {
 }
 
 export const useProperties = (options: UsePropertiesOptions = {}) => {
-  const { page = 1, pageSize = 10, search, sortBy, sortOrder, enabled = true } = options;
+  const { page = 1, pageSize = 10, enabled = true, ...filters } = options;
   const queryClient = useQueryClient();
 
   const params: Record<string, string | number | undefined> = {
     page,
     pageSize,
-    ...(search && { search }),
-    ...(sortBy && { sortBy }),
-    ...(sortOrder && { sortOrder }),
+    ...filters,
   };
 
   const propertiesQuery = useQuery<PaginatedResponse<Property>>({
