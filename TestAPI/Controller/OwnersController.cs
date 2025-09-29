@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using TestAPI.Model;
+using TestAPI.Model.Responses;
 using TestAPI.Services.DAO;
 using TestAPI.Services.Interfaces;
 
@@ -43,7 +44,7 @@ public class OwnersController : ResourceController<Owner, OwnerService>
         [FromQuery] string sortOrder = "asc")
     {
         FilterDefinition<Owner>? filter = null;
-        
+
         if (!string.IsNullOrEmpty(search))
         {
             filter = Builders<Owner>.Filter.Regex("Name", new BsonRegularExpression(search, "i"));
@@ -81,10 +82,22 @@ public class OwnersController : ResourceController<Owner, OwnerService>
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<IEnumerable<Property>>> GetProperties(string id)
     {
+        try
+        {
 
-        var owner = await _service.GetAsync(id);
-        if (owner is null) return NotFound($"No se encontró un propietario con ID: {id}");
-        return Ok(await _propertyService.GetAsync(Builders<Property>.Filter.Eq("IdOwner", owner.Id)));
+            var owner = await _service.GetAsync(id);
+            return Ok(await _propertyService.GetAsync(Builders<Property>.Filter.Eq(x => x.IdOwner, owner.Id)));
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound($"No se encontró un propietario con ID: {id}");
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Error al obtener las propiedades del propietario: {ex.Message}");
+        }
+
+
     }
 
 

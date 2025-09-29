@@ -1,5 +1,6 @@
 using MongoDB.Driver;
 using TestAPI.Model;
+using TestAPI.Model.Responses;
 
 namespace TestAPI.Services.DAO;
 
@@ -13,13 +14,13 @@ public abstract class BaseService<T> where T : class, IEntity
     }
 
     public virtual async Task<PaginatedResponse<T>> GetPaginatedAsync(
-        int page = 1, 
-        int pageSize = 10, 
-        FilterDefinition<T>? filter = null, 
+        int page = 1,
+        int pageSize = 10,
+        FilterDefinition<T>? filter = null,
         SortDefinition<T>? sort = null)
     {
-        var query = filter == null 
-            ? _collection.Find(_ => true) 
+        var query = filter == null
+            ? _collection.Find(_ => true)
             : _collection.Find(filter);
 
         if (sort != null)

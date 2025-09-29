@@ -2,8 +2,10 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc.Testing;
+using MongoDB.Driver;
 using NUnit.Framework;
 using TestAPI.Model;
+using TestAPI.Model.Responses;
 using TestAPI.Services.DAO;
 
 namespace TestAPI.Tests.Integration;
@@ -20,7 +22,7 @@ public class PropertiesControllerTests : IntegrationTestBase
     }
 
     [Test]
-    public async Task GetProperties_WhenCalled_ReturnsListOfProperties()
+    public async Task GetProperties_WhenCalled_ReturnsPaginatedListOfProperties()
     {
         // Arrange
         var owner = await CreateTestOwner();
@@ -28,13 +30,16 @@ public class PropertiesControllerTests : IntegrationTestBase
         await CreateTestProperty("Test Property 2", owner.Id);
 
         // Act
-        var response = await Client.GetAsync("/api/properties");
-        var properties = await response.Content.ReadFromJsonAsync<List<Property>>();
+        var response = await Client.GetAsync("/api/properties?page=1&pageSize=10");
+        var result = await response.Content.ReadFromJsonAsync<PaginatedResponse<Property>>();
 
         // Assert
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
-        Assert.That(properties, Is.Not.Null);
-        Assert.That(properties!.Count, Is.GreaterThanOrEqualTo(2));
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result.Data, Is.Not.Null);
+        Assert.That(result.Page, Is.EqualTo(1));
+        Assert.That(result.PageSize, Is.EqualTo(10));
+        Assert.That(result.TotalCount, Is.GreaterThanOrEqualTo(2));
     }
 
     [Test]
@@ -175,14 +180,18 @@ public class PropertiesControllerTests : IntegrationTestBase
         await CreateTestProperty("Property 3", owner2.Id);
 
         // Act
-        var response = await Client.GetAsync($"/api/properties?ownerId={owner1.Id}");
-        var properties = await response.Content.ReadFromJsonAsync<List<Property>>();
+        var response = await Client.GetAsync($"/api/properties?ownerId={owner1.Id}&page=1&pageSize=10");
+        var result = await response.Content.ReadFromJsonAsync<PaginatedResponse<Property>>();
 
         // Assert
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
-        Assert.That(properties, Is.Not.Null);
-        Assert.That(properties!.Count, Is.EqualTo(2));
-        Assert.That(properties.All(p => p.IdOwner == owner1.Id), Is.True);
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result.Data, Is.Not.Null);
+        Assert.That(result.Data.Count(), Is.EqualTo(2));
+        Assert.That(result.Data.All(p => p.IdOwner == owner1.Id), Is.True);
+        Assert.That(result.Page, Is.EqualTo(1));
+        Assert.That(result.PageSize, Is.EqualTo(10));
+        Assert.That(result.TotalCount, Is.EqualTo(2));
     }
 
     [Test]
@@ -194,25 +203,33 @@ public class PropertiesControllerTests : IntegrationTestBase
         await CreateTestProperty("Mountain Cabin", owner.Id, "456 Mountain Ln");
         await CreateTestProperty("Downtown Apartment", owner.Id, "789 City St");
 
-        // Act - Buscar por nombre
-        var response1 = await Client.GetAsync("/api/properties?search=Beach");
-        var properties1 = await response1.Content.ReadFromJsonAsync<List<Property>>();
+        // Act - Search by name
+        var response1 = await Client.GetAsync("/api/properties?search=Beach&page=1&pageSize=10");
+        var result1 = await response1.Content.ReadFromJsonAsync<PaginatedResponse<Property>>();
 
         // Assert
         Assert.That(response1.StatusCode, Is.EqualTo(HttpStatusCode.OK));
-        Assert.That(properties1, Is.Not.Null);
-        Assert.That(properties1!.Count, Is.EqualTo(1));
-        Assert.That(properties1[0].Name, Is.EqualTo("Beach House"));
+        Assert.That(result1, Is.Not.Null);
+        Assert.That(result1.Data, Is.Not.Null);
+        Assert.That(result1.Data.Count(), Is.EqualTo(1));
+        Assert.That(result1.Data.First().Name, Is.EqualTo("Beach House"));
+        Assert.That(result1.Page, Is.EqualTo(1));
+        Assert.That(result1.PageSize, Is.EqualTo(10));
+        Assert.That(result1.TotalCount, Is.EqualTo(1));
 
-        // Act - Buscar por dirección
-        var response2 = await Client.GetAsync("/api/properties?search=Mountain");
-        var properties2 = await response2.Content.ReadFromJsonAsync<List<Property>>();
+        // Act - Search by address
+        var response2 = await Client.GetAsync("/api/properties?search=Mountain&page=1&pageSize=10");
+        var result2 = await response2.Content.ReadFromJsonAsync<PaginatedResponse<Property>>();
 
         // Assert
         Assert.That(response2.StatusCode, Is.EqualTo(HttpStatusCode.OK));
-        Assert.That(properties2, Is.Not.Null);
-        Assert.That(properties2!.Count, Is.EqualTo(1));
-        Assert.That(properties2[0].Address, Is.EqualTo("456 Mountain Ln"));
+        Assert.That(result2, Is.Not.Null);
+        Assert.That(result2.Data, Is.Not.Null);
+        Assert.That(result2.Data.Count(), Is.EqualTo(1));
+        Assert.That(result2.Data.First().Address, Is.EqualTo("456 Mountain Ln"));
+        Assert.That(result2.Page, Is.EqualTo(1));
+        Assert.That(result2.PageSize, Is.EqualTo(10));
+        Assert.That(result2.TotalCount, Is.EqualTo(1));
     }
 
     private async Task<Property> CreateTestProperty(string name, string ownerId, string address = "123 Test St")

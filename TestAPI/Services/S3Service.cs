@@ -7,7 +7,7 @@ using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Processing;
 using SixLabors.ImageSharp.Formats.Jpeg;
 using TestAPI.Services.Interfaces;
-using TestAPI.Models;
+using TestAPI.Model;
 
 namespace TestAPI.Services;
 

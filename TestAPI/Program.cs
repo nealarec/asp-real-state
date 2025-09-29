@@ -1,14 +1,3 @@
-using Amazon.S3;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using TestAPI.Data;
-using TestAPI.Services;
-using TestAPI.Services.DAO;
-using TestAPI.Services.Interfaces;
-using TestAPI.Models;
-using MongoDB.Driver;
-
 namespace TestAPI;
 
 public class Program
@@ -49,7 +38,7 @@ public class Program
         builder.Services.AddScoped<Services.DAO.PropertyImageService>();
 
         // Configure S3
-        builder.Services.Configure<Models.S3Settings>(
+        builder.Services.Configure<Model.S3Settings>(
             builder.Configuration.GetSection("S3Settings"));
         builder.Services.AddScoped<Services.Interfaces.IS3Service, Services.S3Service>();
     }

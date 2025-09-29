@@ -1,4 +1,4 @@
-namespace TestAPI.Model;
+namespace TestAPI.Model.Responses;
 
 public class PaginatedResponse<T>
 {

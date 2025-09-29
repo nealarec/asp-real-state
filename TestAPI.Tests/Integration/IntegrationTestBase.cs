@@ -118,7 +118,13 @@ public abstract class IntegrationTestBase : IDisposable
     protected PropertyService CreatePropertyService()
     {
         var logger = _loggerFactory.CreateLogger<PropertyService>();
-        return new PropertyService(_mongoDBService, CreateOwnerService());
+        return new PropertyService(_mongoDBService, CreateOwnerService(), CreatePropertyImageService(), _mockS3Service, logger);
+    }
+
+    protected PropertyImageService CreatePropertyImageService()
+    {
+        var logger = _loggerFactory.CreateLogger<PropertyImageService>();
+        return new PropertyImageService(_mongoDBService);
     }
 
     protected async Task<Owner> CreateTestOwner(string name = "Test Owner", string address = "123 Test St")

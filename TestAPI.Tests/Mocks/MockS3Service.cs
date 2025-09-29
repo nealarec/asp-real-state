@@ -6,6 +6,9 @@ namespace TestAPI.Tests.Mocks;
 // Implementación mock de IS3Service para pruebas
 public class MockS3Service : IS3Service
 {
+    public string PropertyImageBucketName => "property-images";
+    public string OwnerImageBucketName => "owner-images";
+
     public Task<IS3Service.FileUploadResult> UploadFileAsync(IFormFile file, string bucketName, string? prefix = null)
     {
         return Task.FromResult(new IS3Service.FileUploadResult
@@ -41,7 +44,7 @@ public class MockS3Service : IS3Service
     {
         if (string.IsNullOrEmpty(fileName))
             return string.Empty;
-            
+
         return $"https://mock-s3-url.com/{bucketName}/{fileName}";
     }
 

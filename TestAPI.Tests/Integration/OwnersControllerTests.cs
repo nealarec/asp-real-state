@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using NUnit.Framework;
 using TestAPI;
 using TestAPI.Model;
+using TestAPI.Model.Responses;
 using TestAPI.Services.DAO;
 
 namespace TestAPI.Tests.Integration;
@@ -21,19 +22,23 @@ public class OwnersControllerTests : IntegrationTestBase
     }
 
     [Test]
-    public async Task GetOwners_WhenCalled_ReturnsListOfOwners()
+    public async Task GetOwners_WhenCalled_ReturnsPaginatedListOfOwners()
     {
         // Arrange
         var testOwner = await CreateTestOwner();
 
         // Act
-        var response = await Client.GetAsync("/api/owners");
-        var owners = await response.Content.ReadFromJsonAsync<Owner[]>();
+        var response = await Client.GetAsync("/api/owners?page=1&pageSize=10");
+        var result = await response.Content.ReadFromJsonAsync<PaginatedResponse<Owner>>();
 
         // Assert
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
-        Assert.That(owners, Is.Not.Null);
-        Assert.That(owners, Has.Length.GreaterThan(2));
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result.Data, Is.Not.Null);
+        Assert.That(result.Page, Is.EqualTo(1));
+        Assert.That(result.PageSize, Is.EqualTo(10));
+        Assert.That(result.TotalPages, Is.GreaterThan(0));
+        Assert.That(result.TotalCount, Is.GreaterThan(0));
     }
 
     [Test]
@@ -74,14 +79,17 @@ public class OwnersControllerTests : IntegrationTestBase
         var testOwner = await CreateTestOwner("Nelson Mandela");
 
         // Act
-        var response = await Client.GetAsync($"/api/owners?search={testOwner.Name}");
-        var owners = await response.Content.ReadFromJsonAsync<Owner[]>();
+        var response = await Client.GetAsync($"/api/owners?search={testOwner.Name}&page=1&pageSize=10");
+        var result = await response.Content.ReadFromJsonAsync<PaginatedResponse<Owner>>();
 
         // Assert
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
-        Assert.That(owners, Is.Not.Null);
-        Assert.That(owners, Has.Length.EqualTo(1));
-        Assert.That(owners[0].Name, Is.EqualTo(testOwner.Name));
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result.Data, Is.Not.Null);
+        Assert.That(result.Data.Count(), Is.EqualTo(1));
+        Assert.That(result.Data.First().Name, Is.EqualTo(testOwner.Name));
+        Assert.That(result.Page, Is.EqualTo(1));
+        Assert.That(result.PageSize, Is.EqualTo(10));
     }
 
     [Test]
@@ -91,14 +99,17 @@ public class OwnersControllerTests : IntegrationTestBase
         var testOwner = await CreateTestOwner("Natalia Vargas");
 
         // Act
-        var response = await Client.GetAsync($"/api/owners?search=Natalia");
-        var owners = await response.Content.ReadFromJsonAsync<Owner[]>();
+        var response = await Client.GetAsync($"/api/owners?search=Natalia&page=1&pageSize=10");
+        var result = await response.Content.ReadFromJsonAsync<PaginatedResponse<Owner>>();
 
         // Assert
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
-        Assert.That(owners, Is.Not.Null);
-        Assert.That(owners, Has.Length.EqualTo(1));
-        Assert.That(owners[0].Name, Is.EqualTo(testOwner.Name));
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result.Data, Is.Not.Null);
+        Assert.That(result.Data.Count(), Is.EqualTo(1));
+        Assert.That(result.Data.First().Name, Is.EqualTo(testOwner.Name));
+        Assert.That(result.Page, Is.EqualTo(1));
+        Assert.That(result.PageSize, Is.EqualTo(10));
     }
 
     [Test]
@@ -206,11 +217,11 @@ public class OwnersControllerTests : IntegrationTestBase
         // Arrange
         // Crear un propietario
         var owner = await CreateTestOwner("Propietario de Prueba");
-        
+
         // Crear propiedades asociadas al propietario
         var property1 = await CreateTestProperty("Propiedad 1", "Calle 123", owner.Id);
         var property2 = await CreateTestProperty("Propiedad 2", "Avenida 456", owner.Id);
-        
+
         // Crear una propiedad que no pertenece al propietario
         var otherOwner = await CreateTestOwner("Otro Propietario");
         await CreateTestProperty("Otra Propiedad", "Calle 789", otherOwner.Id);
@@ -228,18 +239,20 @@ public class OwnersControllerTests : IntegrationTestBase
     }
 
     [Test]
-    public async Task GetOwnerProperties_WithNonExistentOwnerId_ReturnsEmptyList()
+    public async Task GetOwnerProperties_WithNonExistentOwnerId_ReturnsNotFound()
     {
         // Arrange
         var nonExistentId = "507f1f77bcf86cd799439011"; // ID de MongoDB válido pero que no existe
 
         // Act
         var response = await Client.GetAsync($"/api/owners/{nonExistentId}/properties");
-        var properties = await response.Content.ReadFromJsonAsync<Property[]>();
 
         // Assert
-        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
-        Assert.That(properties, Is.Not.Null);
-        Assert.That(properties, Is.Empty);
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
+
+        // Verify the response content is not empty and contains the expected error message
+        var content = await response.Content.ReadAsStringAsync();
+        Assert.That(content, Is.Not.Null.Or.Empty);
+        Assert.That(content, Does.Contain("No se encontró un propietario con ID"));
     }
 }
