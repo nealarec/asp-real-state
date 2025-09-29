@@ -15,7 +15,7 @@ export default function PropertyCard({ property }: { property: Property }) {
         <div className="w-full sm:w-48 h-32 bg-gray-100 rounded flex items-center justify-center">
           <img
             src={housePlaceholder}
-            alt="Placeholder de propiedad"
+            alt="Property placeholder"
             className="w-12 h-12 text-gray-400"
           />
         </div>
@@ -36,7 +36,7 @@ export default function PropertyCard({ property }: { property: Property }) {
         <div className="mt-2">
           <span className="text-green-700 font-semibold">${property.price?.toLocaleString()}</span>
           {property.year && (
-            <span className="text-gray-500 text-sm ml-2">Año: {property.year}</span>
+            <span className="text-gray-500 text-sm ml-2">Year: {property.year}</span>
           )}
         </div>
       </div>

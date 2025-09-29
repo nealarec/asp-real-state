@@ -38,7 +38,7 @@ const App: React.FC = () => {
             }
           />
           <AppRoute
-            path="/propietarios"
+            path="/owners"
             element={
               <Layout>
                 <OwnersPage />
@@ -46,7 +46,7 @@ const App: React.FC = () => {
             }
           />
           <AppRoute
-            path="/propietarios/:id"
+            path="/owners/:id"
             element={
               <Layout>
                 <OwnerDetailPage />
@@ -54,7 +54,7 @@ const App: React.FC = () => {
             }
           />
           <AppRoute
-            path="/propiedades"
+            path="/properties"
             element={
               <Layout>
                 <PropertiesPage />
@@ -62,7 +62,7 @@ const App: React.FC = () => {
             }
           />
           <AppRoute
-            path="/propiedades/nueva"
+            path="/properties/new"
             element={
               <Layout>
                 <PropertyFormPage />
@@ -70,7 +70,7 @@ const App: React.FC = () => {
             }
           />
           <AppRoute
-            path="/propiedades/editar/:id"
+            path="/properties/edit/:id"
             element={
               <Layout>
                 <PropertyFormPage />
@@ -78,7 +78,7 @@ const App: React.FC = () => {
             }
           />
           <AppRoute
-            path="/propiedades/:id"
+            path="/properties/:id"
             element={
               <Layout>
                 <PropertyDetailPage />
@@ -91,12 +91,12 @@ const App: React.FC = () => {
               <Layout>
                 <div className="text-center py-12">
                   <h1 className="text-4xl font-bold text-gray-900 mb-4">404</h1>
-                  <p className="text-xl text-gray-600 mb-6">Página no encontrada</p>
+                  <p className="text-xl text-gray-600 mb-6">Page not found</p>
                   <Link
                     to="/"
                     className="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
                   >
-                    Volver al inicio
+                    Back to home
                   </Link>
                 </div>
               </Layout>

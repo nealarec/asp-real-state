@@ -12,18 +12,18 @@ export default function OwnersPage() {
     queryFn: () => fetch("/api/owners").then(res => res.json()),
   });
 
-  if (isLoading) return <div>Cargando propietarios...</div>;
-  if (error) return <div>Error al cargar los propietarios</div>;
+  if (isLoading) return <div>Loading owners...</div>;
+  if (error) return <div>Error loading owners</div>;
 
   return (
     <div className="p-4">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Propietarios</h1>
+        <h1 className="text-2xl font-bold">Owners</h1>
         <Link
-          to="/propietarios/nuevo"
+          to="/owners/new"
           className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
         >
-          Agregar Propietario
+          Add Owner
         </Link>
       </div>
 
@@ -31,7 +31,7 @@ export default function OwnersPage() {
         {owners?.map(owner => (
           <Link
             key={owner.id}
-            to={`/propietarios/${owner.id}`}
+            to={`/owners/${owner.id}`}
             className="p-4 border rounded-lg shadow-sm hover:shadow-md transition-shadow bg-white"
           >
             <div className="flex items-center mb-2">

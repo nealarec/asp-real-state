@@ -17,13 +17,13 @@ export default function OwnerDetailPage() {
     queryFn: () => fetch(`/api/owners/${id}/properties`).then(res => res.json()),
   });
 
-  if (isLoadingOwner) return <div>Cargando información del propietario...</div>;
-  if (!owner) return <div>Propietario no encontrado</div>;
+  if (isLoadingOwner) return <div>Loading owner information...</div>;
+  if (!owner) return <div>Owner not found</div>;
 
   return (
     <div className="p-4">
-      <Link to="/propietarios" className="text-blue-600 hover:underline mb-4 inline-block">
-        &larr; Volver a Propietarios
+      <Link to="/owners" className="text-blue-600 hover:underline mb-4 inline-block">
+        &larr; Back to Owners
       </Link>
 
       <div className="bg-white p-6 rounded-lg shadow-md mb-6">
@@ -31,20 +31,20 @@ export default function OwnerDetailPage() {
         <p className="text-gray-600">{owner.address}</p>
 
         <div className="mt-6">
-          <h2 className="text-xl font-semibold mb-4">Propiedades</h2>
+          <h2 className="text-xl font-semibold mb-4">Properties</h2>
 
           {isLoadingProperties ? (
-            <p>Cargando propiedades...</p>
+            <p>Loading properties...</p>
           ) : properties && properties.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {properties.map(property => (
-                <Link key={property.id} to={`/propiedades/${property.id}`}>
+                <Link key={property.id} to={`/properties/${property.id}`}>
                   <PropertyCard property={property} />
                 </Link>
               ))}
             </div>
           ) : (
-            <p>Este propietario no tiene propiedades registradas.</p>
+            <p>This owner has no registered properties.</p>
           )}
         </div>
       </div>

@@ -18,17 +18,17 @@ export default function PropertyDetailPage() {
   });
 
   const { data: images = [], isLoading: isLoadingImages } = usePropertyImages(id);
-  if (isLoading) return <div className="p-4">Cargando propiedad...</div>;
-  if (error) return <div className="p-4">Error al cargar la propiedad</div>;
-  if (!property) return <div className="p-4">Propiedad no encontrada</div>;
+  if (isLoading) return <div className="p-4">Loading property...</div>;
+  if (error) return <div className="p-4">Error loading property</div>;
+  if (!property) return <div className="p-4">Property not found</div>;
 
   // Use existing images array directly since it already includes the cover image
   const allImages = images;
 
   return (
     <div className="p-4">
-      <Link to="/propiedades" className="text-blue-600 hover:underline mb-4 inline-block">
-        &larr; Volver a Propiedades
+      <Link to="/properties" className="text-blue-600 hover:underline mb-4 inline-block">
+        &larr; Back to Properties
       </Link>
 
       <div className="bg-white p-6 rounded-lg shadow-md">
@@ -54,7 +54,7 @@ export default function PropertyDetailPage() {
               <div className="aspect-video bg-gray-100 rounded-lg flex items-center justify-center">
                 <img
                   src={placeholderImage}
-                  alt="No hay imágenes disponibles"
+                  alt="No images available"
                   className="h-full w-full object-contain p-8 opacity-20"
                 />
               </div>
@@ -63,47 +63,47 @@ export default function PropertyDetailPage() {
 
           <div>
             <div className="mb-6">
-              <h2 className="text-lg font-semibold mb-2">Descripción</h2>
-              <p className="text-gray-700">{property.name || "No hay descripción disponible."}</p>
+              <h2 className="text-lg font-semibold mb-2">Description</h2>
+              <p className="text-gray-700">{property.name || "No description available."}</p>
             </div>
 
             <div className="grid grid-cols-2 gap-4 mb-6">
               <div>
-                <h3 className="text-sm font-medium text-gray-500">Año</h3>
+                <h3 className="text-sm font-medium text-gray-500">Year</h3>
                 <p>{property.year}</p>
               </div>
               <div>
-                <h3 className="text-sm font-medium text-gray-500">Propietario</h3>
+                <h3 className="text-sm font-medium text-gray-500">Owner</h3>
                 {property.idOwner ? (
                   <Link
-                    to={`/propietarios/${property.idOwner}`}
+                    to={`/owners/${property.idOwner}`}
                     className="text-blue-600 hover:underline"
                   >
                     {property.idOwner}
                   </Link>
                 ) : (
-                  <p>No disponible</p>
+                  <p>Not available</p>
                 )}
               </div>
             </div>
 
             <div className="flex gap-4">
               <Link
-                to={`/propiedades/editar/${property.id}`}
+                to={`/properties/edit/${property.id}`}
                 className="bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600 transition-colors"
               >
-                Editar
+                Edit
               </Link>
               <button
                 className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors"
                 onClick={() => {
                   // Lógica para eliminar
-                  if (confirm("¿Estás seguro de que deseas eliminar esta propiedad?")) {
+                  if (confirm("Are you sure you want to delete this property?")) {
                     // Llamada a la API para eliminar
                   }
                 }}
               >
-                Eliminar
+                Delete
               </button>
             </div>
           </div>

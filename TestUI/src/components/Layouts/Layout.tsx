@@ -15,12 +15,12 @@ const Layout = ({ children }: LayoutProps) => {
             <div className="flex">
               <div className="flex-shrink-0 flex items-center">
                 <Link to="/" className="text-xl font-bold text-gray-800">
-                  Inmobiliaria
+Real Estate App
                 </Link>
               </div>
               <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-                <NavLink to="/propiedades">Propiedades</NavLink>
-                <NavLink to="/propietarios">Propietarios</NavLink>
+                <NavLink to="/properties">Properties</NavLink>
+                <NavLink to="/owners">Owners</NavLink>
               </div>
             </div>
           </div>

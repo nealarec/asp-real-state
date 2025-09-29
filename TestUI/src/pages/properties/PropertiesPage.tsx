@@ -13,24 +13,24 @@ export default function PropertiesPage() {
     queryFn: () => fetch("/api/properties").then(res => res.json()),
   });
 
-  if (isLoading) return <div>Cargando propiedades...</div>;
-  if (error) return <div>Error al cargar las propiedades</div>;
+  if (isLoading) return <div>Loading properties...</div>;
+  if (error) return <div>Error loading properties</div>;
 
   return (
     <div className="p-4">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Propiedades</h1>
+        <h1 className="text-2xl font-bold">Properties</h1>
         <Link
-          to="/propiedades/nueva"
+          to="/properties/new"
           className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
         >
-          Agregar Propiedad
+          Add Property
         </Link>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4">
         {properties?.map(property => (
-          <Link key={property.id} to={`/propiedades/${property.id}`}>
+          <Link key={property.id} to={`/properties/${property.id}`}>
             <PropertyCard property={property} />
           </Link>
         ))}

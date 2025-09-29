@@ -19,9 +19,8 @@ export const PropertyImageManager: React.FC<PropertyImageManagerProps> = ({
   images = [],
   onUpload,
   onDelete,
-  onSetAsMain,
   isLoading = false,
-  uploadTitle = "Agregar imágenes",
+  uploadTitle = "Add images",
   className = "",
 }) => {
   const [isConfirmingDelete, setIsConfirmingDelete] = React.useState<string | null>(null);
@@ -43,10 +42,6 @@ export const PropertyImageManager: React.FC<PropertyImageManagerProps> = ({
     }
   };
 
-  const handleDeleteClick = (id: string) => {
-    setIsConfirmingDelete(id);
-  };
-
   const confirmDelete = async () => {
     if (isConfirmingDelete) {
       await onDelete(isConfirmingDelete);
@@ -59,12 +54,12 @@ export const PropertyImageManager: React.FC<PropertyImageManagerProps> = ({
   };
 
   return (
-    <div className={`pt-4 border-t border-gray-200 ${className}`}>
-      <h3 className="text-lg font-medium text-gray-900 mb-4">Imágenes de la propiedad</h3>
+    <div className={`${className}`}>
+      <h3 className="text-lg font-medium text-gray-900 mb-4">Property Images</h3>
 
       <div className="mt-6">
         <h4 className="text-md font-medium text-gray-700 mb-3">
-          {images.length === 0 ? uploadTitle || "Agregar imágenes" : "Agregar más imágenes"}
+          {images.length === 0 ? uploadTitle || "Add images" : "Add more images"}
         </h4>
         <ImageDropzone
           onDrop={handleDrop}
