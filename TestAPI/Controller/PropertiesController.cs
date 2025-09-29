@@ -14,12 +14,12 @@ namespace TestAPI.Controller;
 public class PropertiesController : ResourceController<Property, PropertyService>
 {
     public PropertiesController(PropertyService propertyService, ILogger<PropertiesController> logger)
-        : base(propertyService, logger, "propiedad")
+        : base(propertyService, logger, "property")
     {
     }
 
     /// <summary>
-    /// Obtiene metadatos sobre las propiedades (rangos de precios, años, etc.)
+    /// Gets metadata about properties (price ranges, years, etc.)
     /// </summary>
     [HttpGet("metadata")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(PropertyMetadataResponse))]
@@ -40,14 +40,14 @@ public class PropertiesController : ResourceController<Property, PropertyService
     }
 
     /// <summary>
-    /// Obtiene todas las propiedades con paginación, ordenamiento y filtrado opcional
+    /// Gets all properties with pagination, sorting and optional filtering
     /// </summary>
-    /// <param name="page">Número de página (por defecto: 1)</param>
-    /// <param name="pageSize">Tamaño de página (por defecto: 10, máximo: 100)</param>
-    /// <param name="search">Texto para buscar en nombre o dirección</param>
-    /// <param name="ownerId">Filtrar por ID del propietario</param>
-    /// <param name="sortBy">Campo por el que ordenar (name, address, price, year)</param>
-    /// <param name="sortOrder">Orden de clasificación (asc/desc)</param>
+    /// <param name="page">Page number (default: 1)</param>
+    /// <param name="pageSize">Page size (default: 10, max: 100)</param>
+    /// <param name="search">Text to search in name or address</param>
+    /// <param name="ownerId">Filter by owner ID</param>
+    /// <param name="sortBy">Field to sort by (name, address, price, year)</param>
+    /// <param name="sortOrder">Sort order (asc/desc)</param>
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(PaginatedResponse<Property>))]
     public async Task<ActionResult<PaginatedResponse<Property>>> Get(
@@ -109,7 +109,7 @@ public class PropertiesController : ResourceController<Property, PropertyService
             ? Builders<Property>.Filter.And(filters)
             : null;
 
-        // Mapear campos de ordenamiento
+        // Map sort fields
         string? sortField = sortBy?.ToLower() switch
         {
             "name" => "Name",
@@ -123,9 +123,9 @@ public class PropertiesController : ResourceController<Property, PropertyService
     }
 
     /// <summary>
-    /// Obtiene una propiedad por su ID
+    /// Gets a property by its ID
     /// </summary>
-    /// <param name="id">ID de la propiedad</param>
+    /// <param name="id">Property ID</param>
     [HttpGet("{id:length(24)}", Name = "GetById")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Property))]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -136,16 +136,16 @@ public class PropertiesController : ResourceController<Property, PropertyService
     }
 
     /// <summary>
-    /// Obtiene el propietario de una propiedad
+    /// Gets the owner of a property
     /// </summary>
-    /// <param name="id">ID de la propiedad</param>
+    /// <param name="id">Property ID</param>
     [HttpGet("{id:length(24)}/owner")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<Property>))]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<IEnumerable<Property>>> GetByOwner(string id)
     {
         if (!ObjectId.TryParse(id, out _))
-            return BadRequest("ID de propietario no válido");
+            return BadRequest("Invalid owner ID");
 
         try
         {
@@ -154,13 +154,13 @@ public class PropertiesController : ResourceController<Property, PropertyService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, $"Error al obtener las propiedades del propietario con ID: {id}");
-            return StatusCode(500, $"Error al obtener las propiedades del propietario con ID: {id}");
+            _logger.LogError(ex, $"Error getting properties for owner with ID: {id}");
+            return StatusCode(500, $"Error getting properties for owner with ID: {id}");
         }
     }
 
     /// <summary>
-    /// Crea una nueva propiedad
+    /// Creates a new property
     /// </summary>
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(Property))]
@@ -171,7 +171,7 @@ public class PropertiesController : ResourceController<Property, PropertyService
     }
 
     /// <summary>
-    /// Actualiza una propiedad existente
+    /// Updates an existing property
     /// </summary>
     [HttpPut("{id:length(24)}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -183,7 +183,7 @@ public class PropertiesController : ResourceController<Property, PropertyService
     }
 
     /// <summary>
-    /// Elimina una propiedad existente
+    /// Deletes an existing property
     /// </summary>
     [HttpDelete("{id:length(24)}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]

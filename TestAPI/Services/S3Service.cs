@@ -34,7 +34,7 @@ public class S3Service : IS3Service
         var config = new AmazonS3Config
         {
             ServiceURL = _serviceUrl,
-            ForcePathStyle = true, // Necesario para MinIO
+            ForcePathStyle = true, // Required for MinIO
             AuthenticationRegion = RegionEndpoint.USEast1.SystemName,
             UseHttp = _serviceUrl.StartsWith("http://"),
             Timeout = TimeSpan.FromMinutes(5),
@@ -50,7 +50,7 @@ public class S3Service : IS3Service
     {
         if (string.IsNullOrEmpty(fileName))
         {
-            _logger.LogWarning("Se solicitó una URL para un nombre de archivo vacío o nulo");
+            _logger.LogWarning("A URL was requested for an empty or null filename");
             return string.Empty;
         }
 
@@ -58,7 +58,7 @@ public class S3Service : IS3Service
         if (Uri.TryCreate(fileName, UriKind.Absolute, out var uriResult)
             && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps))
         {
-            _logger.LogInformation("El archivo ya es una URL completa: {Url}", fileName);
+            _logger.LogInformation("The file is already a full URL: {Url}", fileName);
             return fileName;
         }
 
@@ -71,15 +71,15 @@ public class S3Service : IS3Service
                 Key = fileName
             };
 
-            // Si el archivo no existe, GetObjectMetadataAsync lanzará una excepción
+            // If the file doesn't exist, GetObjectMetadataAsync will throw an exception
             var metadata = _s3Client.GetObjectMetadataAsync(metadataRequest).GetAwaiter().GetResult();
 
-            // Si llegamos aquí, el archivo existe, proceder a generar la URL firmada
+            // If we get here, the file exists, proceed to generate the signed URL
             var request = new GetPreSignedUrlRequest
             {
                 BucketName = bucketName,
                 Key = fileName,
-                Expires = DateTime.UtcNow.AddHours(1), // La URL expirará en 1 hora
+                Expires = DateTime.UtcNow.AddHours(1), // The URL will expire in 1 hour
                 Protocol = _serviceUrl.StartsWith("https") ? Protocol.HTTPS : Protocol.HTTP
             };
 
@@ -104,7 +104,7 @@ public class S3Service : IS3Service
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error al generar URL firmada para {FileName} en el bucket {BucketName}", fileName, bucketName);
+            _logger.LogError(ex, "Error generating signed URL for {FileName} in bucket {BucketName}", fileName, bucketName);
             // En caso de error, devolver la URL directa como respaldo
             return $"{_publicBaseUrl}/{bucketName}/{Uri.EscapeDataString(fileName)}";
         }
@@ -114,20 +114,18 @@ public class S3Service : IS3Service
     {
         await CreateBucketIfNotExistsAsync(bucketName);
 
-        // Generar un nombre de archivo único
+        // Generate a unique filename
         var fileExtension = Path.GetExtension(file.FileName);
         var fileName = Path.GetFileNameWithoutExtension(file.FileName);
         var uniqueFileName = $"{Guid.NewGuid()}_{fileName}{fileExtension}";
-
-        // Construir la ruta completa con prefijo si existe
         var key = string.IsNullOrEmpty(prefix)
             ? uniqueFileName
             : $"{prefix.TrimEnd('/')}/{uniqueFileName}";
 
-        _logger.LogInformation("Subiendo archivo {FileName} como {Key} al bucket {BucketName}",
+        _logger.LogInformation("Uploading file {FileName} as {Key} to bucket {BucketName}",
             file.FileName, key, bucketName);
 
-        // Subir el archivo original
+        // Upload the original file
         var fileTransferUtility = new TransferUtility(_s3Client);
         using var stream = file.OpenReadStream();
         await fileTransferUtility.UploadAsync(new TransferUtilityUploadRequest
@@ -136,8 +134,8 @@ public class S3Service : IS3Service
             BucketName = bucketName,
             Key = key,
             ContentType = file.ContentType,
-            // No usamos CannedACL ya que usaremos URLs firmadas para el acceso
-            // Esto es más seguro que hacer los archivos públicos
+            // We don't use CannedACL as we'll use signed URLs for access
+            // This is more secure than making files public
             CannedACL = null
         });
 
@@ -149,12 +147,12 @@ public class S3Service : IS3Service
             Size = file.Length
         };
 
-        // Crear y subir miniatura si es una imagen
+        // Create and upload thumbnail if it's an image
         if (file.ContentType.StartsWith("image/"))
         {
             try
             {
-                // Generar miniatura
+                // Generate thumbnail
                 var thumbnailKey = $"thumbnails/{key}";
                 using var image = await Image.LoadAsync(stream);
                 image.Mutate(x => x
@@ -164,7 +162,7 @@ public class S3Service : IS3Service
                         Mode = ResizeMode.Crop
                     }));
 
-                // Subir miniatura
+                // Upload thumbnail
                 using var thumbnailStream = new MemoryStream();
                 await image.SaveAsJpegAsync(thumbnailStream);
                 thumbnailStream.Position = 0;
@@ -182,12 +180,12 @@ public class S3Service : IS3Service
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al generar miniatura para {FileName}", file.FileName);
-                // Continuar sin miniatura si hay un error
+                _logger.LogError(ex, "Error generating thumbnail for {FileName}", file.FileName);
+                // Continue without thumbnail if there's an error
             }
         }
 
-        _logger.LogInformation("Archivo {FileName} subido exitosamente como {Key}", file.FileName, key);
+        _logger.LogInformation("File {FileName} uploaded successfully as {Key}", file.FileName, key);
         return result;
     }
 
@@ -228,7 +226,7 @@ public class S3Service : IS3Service
     }
     public async Task<IS3Service.FileUploadResult> UpdateFileAsync(string oldFileName, IFormFile newFile, string bucketName, string? prefix = null)
     {
-        _logger.LogInformation("Iniciando actualización de archivo. Antiguo: {OldFileName}", oldFileName);
+        _logger.LogInformation("Starting file update. Old file: {OldFileName}", oldFileName);
 
         // Primero subimos el nuevo archivo
         var uploadResult = await UploadFileAsync(newFile, bucketName, prefix);
@@ -238,10 +236,10 @@ public class S3Service : IS3Service
             // Si la subida fue exitosa, eliminamos el archivo anterior
             if (!string.IsNullOrEmpty(oldFileName))
             {
-                _logger.LogInformation("Eliminando archivo antiguo: {OldFileName}", oldFileName);
+                _logger.LogInformation("Deleting old file: {OldFileName}", oldFileName);
                 await DeleteFileAsync(oldFileName, bucketName);
 
-                // También eliminamos la miniatura si existe
+                // Also delete the thumbnail if it exists
                 var oldThumbnailKey = $"thumbnails/{oldFileName}";
                 try
                 {
@@ -249,7 +247,7 @@ public class S3Service : IS3Service
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning(ex, "No se pudo eliminar la miniatura antigua: {ThumbnailKey}", oldThumbnailKey);
+                    _logger.LogWarning(ex, "Could not delete old thumbnail: {ThumbnailKey}", oldThumbnailKey);
                 }
             }
 
@@ -257,16 +255,16 @@ public class S3Service : IS3Service
         }
         catch (Exception ex)
         {
-            // Si hay un error al eliminar el archivo antiguo, intentamos limpiar el nuevo archivo subido
-            _logger.LogError(ex, "Error al eliminar el archivo antiguo {OldFileName}. Se procederá a limpiar el nuevo archivo.", oldFileName);
+            // If there's an error deleting the old file, try to clean up the newly uploaded file
+            _logger.LogError(ex, "Error deleting old file {OldFileName}. Will attempt to clean up the new file.", oldFileName);
             try
             {
                 await DeleteFileAsync(uploadResult.FileKey, bucketName);
             }
             catch (Exception cleanEx)
             {
-                _logger.LogError(cleanEx, "Error al limpiar el nuevo archivo {NewFileKey} después de un fallo", uploadResult.FileKey);
-                // No relanzamos la excepción para no perder el error original
+                _logger.LogError(cleanEx, "Error cleaning up new file {NewFileKey} after failure", uploadResult.FileKey);
+                // Don't rethrow the exception to preserve the original error
             }
 
             throw new Exception("Error al actualizar el archivo: " + ex.Message, ex);
@@ -277,7 +275,7 @@ public class S3Service : IS3Service
     {
         try
         {
-            _logger.LogInformation("Verificando si el bucket {BucketName} existe", bucketName);
+            _logger.LogInformation("Checking if bucket {BucketName} exists", bucketName);
 
             // Primero intentamos listar los objetos del bucket para ver si existe
             try
@@ -288,16 +286,16 @@ public class S3Service : IS3Service
                     MaxKeys = 1
                 });
 
-                _logger.LogInformation("El bucket {BucketName} ya existe", bucketName);
+                _logger.LogInformation("Bucket {BucketName} already exists", bucketName);
                 return;
             }
             catch (AmazonS3Exception ex) when (ex.ErrorCode == "NoSuchBucket")
             {
-                _logger.LogInformation("El bucket {BucketName} no existe, creándolo...", bucketName);
-                // El bucket no existe, continuamos con la creación
+                _logger.LogInformation("Bucket {BucketName} does not exist, creating it...", bucketName);
+                // The bucket doesn't exist, continue with creation
             }
 
-            // Si llegamos aquí, el bucket no existe, así que lo creamos
+            // If we get here, the bucket doesn't exist, so we'll create it
             var putBucketRequest = new PutBucketRequest
             {
                 BucketName = bucketName,
@@ -306,17 +304,17 @@ public class S3Service : IS3Service
             };
 
             await _s3Client.PutBucketAsync(putBucketRequest);
-            _logger.LogInformation("Bucket {BucketName} creado exitosamente", bucketName);
+            _logger.LogInformation("Bucket {BucketName} created successfully", bucketName);
         }
         catch (AmazonS3Exception ex)
         {
-            _logger.LogError(ex, "Error de S3 al verificar/crear el bucket {BucketName}", bucketName);
-            throw new Exception($"Error de S3 al verificar/crear el bucket: {ex.Message}", ex);
+            _logger.LogError(ex, "S3 error while verifying/creating bucket {BucketName}", bucketName);
+            throw new Exception($"S3 error while verifying/creating bucket: {ex.Message}", ex);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error inesperado al verificar/crear el bucket {BucketName}", bucketName);
-            throw new Exception($"Error inesperado al verificar/crear el bucket: {ex.Message}", ex);
+            _logger.LogError(ex, "Unexpected error while verifying/creating bucket {BucketName}", bucketName);
+            throw new Exception($"Unexpected error while verifying/creating bucket: {ex.Message}", ex);
         }
     }
 }

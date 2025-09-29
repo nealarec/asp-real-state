@@ -8,7 +8,7 @@ public class PropertyTraceService : BaseService<PropertyTrace>
     public PropertyTraceService(MongoDBService mongoDB)
         : base(mongoDB.GetCollection<PropertyTrace>("propertyTraces"))
     {
-        // Crear índices para búsquedas comunes
+        // Create indexes for common searches
         var propertyIdIndexKeys = Builders<PropertyTrace>.IndexKeys.Ascending(x => x.IdProperty);
         var dateSaleIndexKeys = Builders<PropertyTrace>.IndexKeys.Descending(x => x.DateSale);
 

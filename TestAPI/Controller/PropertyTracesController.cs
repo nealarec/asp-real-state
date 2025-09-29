@@ -8,7 +8,7 @@ using TestAPI.Services.DAO;
 namespace TestAPI.Controller;
 
 /// <summary>
-/// Controlador para gestionar el historial de transacciones de propiedades
+/// Controller for managing property transaction history
 /// </summary>
 [Route("api/properties/{propertyId:length(24)}/traces")]
 [ApiController]
@@ -20,17 +20,17 @@ public class PropertyTracesController : ResourceController<PropertyTrace, Proper
         PropertyTraceService traceService,
         PropertyService propertyService,
         ILogger<PropertyTracesController> logger)
-        : base(traceService, logger, "historial de propiedad")
+        : base(traceService, logger, "property history")
     {
         _propertyService = propertyService;
     }
 
     /// <summary>
-    /// Obtiene el historial de transacciones de una propiedad
+    /// Gets the transaction history of a property
     /// </summary>
-    /// <param name="propertyId">ID de la propiedad</param>
-    /// <param name="startDate">Fecha de inicio opcional (formato: yyyy-MM-dd)</param>
-    /// <param name="endDate">Fecha de fin opcional (formato: yyyy-MM-dd)</param>
+    /// <param name="propertyId">Property ID</param>
+    /// <param name="startDate">Optional start date (format: yyyy-MM-dd)</param>
+    /// <param name="endDate">Optional end date (format: yyyy-MM-dd)</param>
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<PropertyTrace>))]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -41,16 +41,16 @@ public class PropertyTracesController : ResourceController<PropertyTrace, Proper
         [FromQuery] DateTime? endDate = null)
     {
         if (!ObjectId.TryParse(propertyId, out _))
-            return BadRequest("ID de propiedad no válido");
+            return BadRequest("Invalid property ID");
 
         try
         {
-            // Verificar que la propiedad exista
+            // Verify the property exists
             var property = await _propertyService.GetAsync(propertyId);
             if (property == null)
-                return NotFound($"No se encontró la propiedad con ID: {propertyId}");
+                return NotFound($"Property with ID {propertyId} not found");
 
-            // Crear filtro
+            // Create filter
             var filters = new List<FilterDefinition<PropertyTrace>>
             {
                 Builders<PropertyTrace>.Filter.Eq(x => x.IdProperty, propertyId)
@@ -69,16 +69,16 @@ public class PropertyTracesController : ResourceController<PropertyTrace, Proper
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error al obtener el historial de la propiedad con ID: {PropertyId}", propertyId);
-            return StatusCode(500, $"Error al obtener el historial de la propiedad con ID: {propertyId}");
+            _logger.LogError(ex, "Error getting history for property with ID: {PropertyId}", propertyId);
+            return StatusCode(500, $"Error getting history for property with ID: {propertyId}");
         }
     }
 
     /// <summary>
-    /// Obtiene una transacción específica por su ID
+    /// Gets a specific transaction by ID
     /// </summary>
-    /// <param name="propertyId">ID de la propiedad</param>
-    /// <param name="id">ID de la transacción</param>
+    /// <param name="propertyId">Property ID</param>
+    /// <param name="id">Transaction ID</param>
     [HttpGet("{id:length(24)}")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(PropertyTrace))]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -86,33 +86,33 @@ public class PropertyTracesController : ResourceController<PropertyTrace, Proper
     public async Task<ActionResult<PropertyTrace>> GetById(string propertyId, string id)
     {
         if (!ObjectId.TryParse(propertyId, out _))
-            return BadRequest("ID de propiedad no válido");
+            return BadRequest("Invalid property ID");
 
         if (!ObjectId.TryParse(id, out _))
-            return BadRequest("ID de transacción no válido");
+            return BadRequest("Invalid transaction ID");
 
         try
         {
-            // Verificar que la propiedad exista
+            // Verify the property exists
             var property = await _propertyService.GetAsync(propertyId);
             if (property == null)
-                return NotFound($"No se encontró la propiedad con ID: {propertyId}");
+                return NotFound($"Property with ID {propertyId} not found");
 
             var trace = await _service.GetAsync(id);
             if (trace == null || trace.IdProperty != propertyId)
-                return NotFound($"No se encontró la transacción con ID: {id} para la propiedad especificada");
+                return NotFound($"Transaction with ID {id} not found for the specified property");
 
             return Ok(trace);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error al obtener la transacción con ID: {TraceId} de la propiedad con ID: {PropertyId}", id, propertyId);
-            return StatusCode(500, $"Error al obtener la transacción con ID: {id} de la propiedad con ID: {propertyId}");
+            _logger.LogError(ex, "Error getting transaction with ID: {TraceId} for property with ID: {PropertyId}", id, propertyId);
+            return StatusCode(500, $"Error getting transaction with ID: {id} for property with ID: {propertyId}");
         }
     }
 
     /// <summary>
-    /// Registra una nueva transacción para una propiedad
+    /// Registers a new transaction for a property
     /// </summary>
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(PropertyTrace))]
@@ -123,23 +123,23 @@ public class PropertyTracesController : ResourceController<PropertyTrace, Proper
         [FromBody] PropertyTrace trace)
     {
         if (!ObjectId.TryParse(propertyId, out _))
-            return BadRequest("ID de propiedad no válido");
+            return BadRequest("Invalid property ID");
 
         if (trace == null)
-            return BadRequest("Los datos del rastreo son requeridos");
+            return BadRequest("Trace data is required");
 
-        // Validar el modelo
+        // Validate the model
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
         try
         {
-            // Verificar que la propiedad exista
+            // Verify the property exists
             var property = await _propertyService.GetAsync(propertyId);
             if (property == null)
-                return NotFound($"No se encontró la propiedad con ID: {propertyId}");
+                return NotFound($"Property with ID {propertyId} not found");
 
-            // Asignar la propiedad al rastreo
+            // Assign the property to the trace
             trace.IdProperty = propertyId;
             trace.DateSale = DateTime.UtcNow;
 
@@ -155,13 +155,13 @@ public class PropertyTracesController : ResourceController<PropertyTrace, Proper
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error al registrar la transacción para la propiedad con ID: {PropertyId}", propertyId);
-            return StatusCode(500, $"Error al registrar la transacción para la propiedad con ID: {propertyId}");
+            _logger.LogError(ex, "Error registering transaction for property with ID: {PropertyId}", propertyId);
+            return StatusCode(500, $"Error registering transaction for property with ID: {propertyId}");
         }
     }
 
     /// <summary>
-    /// Actualiza una transacción existente
+    /// Updates an existing transaction
     /// </summary>
     [HttpPut("{id:length(24)}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -173,26 +173,26 @@ public class PropertyTracesController : ResourceController<PropertyTrace, Proper
         [FromBody] PropertyTrace updatedTrace)
     {
         if (!ObjectId.TryParse(propertyId, out _))
-            return BadRequest("ID de propiedad no válido");
+            return BadRequest("Invalid property ID");
 
         if (!ObjectId.TryParse(id, out _))
-            return BadRequest("ID de transacción no válido");
+            return BadRequest("Invalid transaction ID");
 
         if (updatedTrace == null)
-            return BadRequest("Los datos de la transacción son requeridos");
+            return BadRequest("Transaction data is required");
 
-        // Validar el modelo
+        // Validate the model
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
         try
         {
-            // Verificar que la transacción exista y pertenezca a la propiedad
+            // Verify the transaction exists and belongs to the property
             var existingTrace = await _service.GetAsync(id);
             if (existingTrace == null || existingTrace.IdProperty != propertyId)
-                return NotFound($"No se encontró la transacción con ID: {id} para la propiedad especificada");
+                return NotFound($"Transaction with ID {id} not found for the specified property");
 
-            // Actualizar solo los campos permitidos
+            // Update only allowed fields
             existingTrace.Name = updatedTrace.Name;
             existingTrace.Value = updatedTrace.Value;
             existingTrace.Tax = updatedTrace.Tax;
@@ -203,13 +203,13 @@ public class PropertyTracesController : ResourceController<PropertyTrace, Proper
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error al actualizar la transacción con ID: {TraceId} de la propiedad con ID: {PropertyId}", id, propertyId);
-            return StatusCode(500, $"Error al actualizar la transacción con ID: {id} de la propiedad con ID: {propertyId}");
+            _logger.LogError(ex, "Error updating transaction with ID: {TraceId} for property with ID: {PropertyId}", id, propertyId);
+            return StatusCode(500, $"Error updating transaction with ID: {id} for property with ID: {propertyId}");
         }
     }
 
     /// <summary>
-    /// Elimina una transacción
+    /// Deletes a transaction
     /// </summary>
     [HttpDelete("{id:length(24)}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -218,25 +218,25 @@ public class PropertyTracesController : ResourceController<PropertyTrace, Proper
     public async Task<IActionResult> DeleteTrace(string propertyId, string id)
     {
         if (!ObjectId.TryParse(propertyId, out _))
-            return BadRequest("ID de propiedad no válido");
+            return BadRequest("Invalid property ID");
 
         if (!ObjectId.TryParse(id, out _))
-            return BadRequest("ID de transacción no válido");
+            return BadRequest("Invalid transaction ID");
 
         try
         {
-            // Verificar que la transacción exista y pertenezca a la propiedad
+            // Verify the transaction exists and belongs to the property
             var existingTrace = await _service.GetAsync(id);
             if (existingTrace == null || existingTrace.IdProperty != propertyId)
-                return NotFound($"No se encontró la transacción con ID: {id} para la propiedad especificada");
+                return NotFound($"Transaction with ID {id} not found for the specified property");
 
             await _service.DeleteAsync(id);
             return NoContent();
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error al eliminar la transacción con ID: {TraceId} de la propiedad con ID: {PropertyId}", id, propertyId);
-            return StatusCode(500, $"Error al eliminar la transacción con ID: {id} de la propiedad con ID: {propertyId}");
+            _logger.LogError(ex, "Error deleting transaction with ID: {TraceId} for property with ID: {PropertyId}", id, propertyId);
+            return StatusCode(500, $"Error deleting transaction with ID: {id} for property with ID: {propertyId}");
         }
     }
 }

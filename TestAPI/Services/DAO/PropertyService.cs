@@ -26,7 +26,7 @@ public class PropertyService : BaseService<Property>
         _s3Service = s3Service;
         _logger = logger;
 
-        // Crear índices para búsquedas comunes
+        // Create indexes for common searches
         var nameIndexKeys = Builders<Property>.IndexKeys.Ascending(x => x.Name);
         var ownerIndexKeys = Builders<Property>.IndexKeys.Ascending(x => x.IdOwner);
         var priceIndexKeys = Builders<Property>.IndexKeys.Ascending(x => x.Price);
@@ -49,7 +49,7 @@ public class PropertyService : BaseService<Property>
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al obtener la imagen de portada para la propiedad {PropertyId}", property.Id);
+                _logger.LogError(ex, "Error getting cover image for property {PropertyId}", property.Id);
                 property.CoverImageUrl = string.Empty;
             }
         }
@@ -70,7 +70,7 @@ public class PropertyService : BaseService<Property>
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al obtener la imagen de portada para la propiedad {PropertyId}", property.Id);
+                _logger.LogError(ex, "Error getting cover image for property {PropertyId}", property.Id);
                 property.CoverImageUrl = string.Empty;
             }
         }
@@ -103,7 +103,7 @@ public class PropertyService : BaseService<Property>
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al obtener la imagen de portada para la propiedad {PropertyId}", property.Id);
+                _logger.LogError(ex, "Error getting cover image for property {PropertyId}", property.Id);
                 property.CoverImageUrl = string.Empty;
             }
         }
@@ -161,18 +161,18 @@ public class PropertyService : BaseService<Property>
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error al convertir valor decimal: {Value}", value);
+            _logger.LogError(ex, "Error converting decimal value: {Value}", value);
             return defaultValue;
         }
     }
 
     public async Task<PropertyMetadataResponse> GetPropertyMetadataAsync()
     {
-        _logger.LogInformation("Iniciando obtención de metadatos de propiedades");
+        _logger.LogInformation("Starting to get property metadata");
 
         try
         {
-            _logger.LogDebug("Construyendo pipeline de agregación");
+            _logger.LogDebug("Building aggregation pipeline");
             var pipeline = new[]
             {
                 new BsonDocument("$group",
@@ -189,16 +189,16 @@ public class PropertyService : BaseService<Property>
                 )
             };
 
-            _logger.LogDebug("Ejecutando consulta de agregación en MongoDB");
+            _logger.LogDebug("Executing aggregation query in MongoDB");
             var result = await _collection.Aggregate<BsonDocument>(pipeline).FirstOrDefaultAsync();
 
             // Log the raw result for debugging
-            _logger.LogDebug("Resultado de la agregación: {Result}", result?.ToJson());
+            _logger.LogDebug("Aggregation result: {Result}", result?.ToJson());
 
             // If there are no properties or the aggregation returned null, return default values
             if (result == null || !result.Contains("totalProperties") || result["totalProperties"].AsInt32 == 0)
             {
-                _logger.LogInformation("No se encontraron propiedades en la base de datos, retornando valores por defecto");
+                _logger.LogInformation("No properties found in the database, returning default values");
                 return new PropertyMetadataResponse
                 {
                     PriceRange = new PriceRange { Min = 0, Max = 0, Average = 0 },
@@ -207,7 +207,7 @@ public class PropertyService : BaseService<Property>
                 };
             }
 
-            _logger.LogInformation("Procesando resultados de la agregación");
+            _logger.LogInformation("Processing aggregation results");
 
             var response = new PropertyMetadataResponse
             {
@@ -225,7 +225,7 @@ public class PropertyService : BaseService<Property>
                 TotalProperties = (int)GetDecimalValue(result.GetValue("totalProperties", BsonNull.Value), 0)
             };
 
-            _logger.LogInformation("Metadatos generados exitosamente. Total de propiedades: {Count}", response.TotalProperties);
+            _logger.LogInformation("Metadata generated successfully. Total properties: {Count}", response.TotalProperties);
             _logger.LogDebug("Rango de precios: Min={MinPrice}, Max={MaxPrice}, Promedio={AvgPrice}",
                 response.PriceRange.Min, response.PriceRange.Max, response.PriceRange.Average);
             _logger.LogDebug("Rango de años: Min={MinYear}, Max={MaxYear}",
@@ -235,7 +235,7 @@ public class PropertyService : BaseService<Property>
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error al obtener los metadatos de las propiedades");
+            _logger.LogError(ex, "Error getting property metadata");
             // Return default values in case of error
             return new PropertyMetadataResponse
             {

@@ -27,7 +27,7 @@ where T : class, IEntity
 
 
     /// <summary>
-    /// Obtiene todos los recursos con filtrado opcional
+    /// Gets all resources with optional filtering
     /// </summary>
     protected virtual async Task<ActionResult<IEnumerable<T>>> GetAllAsync(FilterDefinition<T>? filter = null)
     {
@@ -41,21 +41,21 @@ where T : class, IEntity
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, $"Error al obtener los {_resourceName}");
-            return StatusCode(500, $"Error interno del servidor al obtener los {_resourceName}");
+            _logger.LogError(ex, $"Error getting {_resourceName}");
+            return StatusCode(500, $"Internal server error while getting {_resourceName}");
         }
     }
 
 
     /// <summary>
-    /// Obtiene todos los recursos con paginación y filtrado opcional
+    /// Gets all resources with pagination and optional filtering
     /// </summary>
-    /// <param name="page">Número de página (por defecto: 1)</param>
-    /// <param name="pageSize">Tamaño de página (por defecto: 10)</param>
+    /// <param name="page">Page number (default: 1)</param>
+    /// <param name="pageSize">Page size (default: 10)</param>
     /// <param name="filter">Filtro opcional</param>
-    /// <param name="sortField">Campo por el que ordenar</param>
-    /// <param name="sortOrder">Orden de clasificación (asc/desc)</param>
-    /// <returns>Lista paginada de recursos</returns>
+    /// <param name="sortField">Field to sort by</param>
+    /// <param name="sortOrder">Sort order (asc/desc)</param>
+    /// <returns>Paginated list of resources</returns>
     protected virtual async Task<ActionResult<PaginatedResponse<T>>> GetAllAsync(
         int page = 1,
         int pageSize = 10,
@@ -68,7 +68,7 @@ where T : class, IEntity
             if (page < 1) page = 1;
             if (pageSize < 1 || pageSize > 100) pageSize = 10;
 
-            // Construir la definición de ordenación si se proporciona un campo
+            // Build sort definition if a field is provided
             SortDefinition<T>? sort = null;
             if (!string.IsNullOrEmpty(sortField))
             {
@@ -80,7 +80,7 @@ where T : class, IEntity
 
             var result = await _service.GetPaginatedAsync(page, pageSize, filter, sort);
 
-            // Agregar encabezados para la paginación
+            // Add pagination headers
             Response.Headers["X-Total-Count"] = result.TotalCount.ToString();
             Response.Headers["X-Page"] = result.Page.ToString();
             Response.Headers["X-Page-Size"] = result.PageSize.ToString();
@@ -90,19 +90,19 @@ where T : class, IEntity
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, $"Error al obtener los {_resourceName}");
-            return StatusCode(500, $"Error interno del servidor al obtener los {_resourceName}");
+            _logger.LogError(ex, $"Error getting {_resourceName}");
+            return StatusCode(500, $"Internal server error while getting {_resourceName}");
         }
     }
 
 
     /// <summary>
-    /// Obtiene un recurso por su ID
+    /// Gets a resource by its ID
     /// </summary>
     protected virtual async Task<ActionResult<T>> GetByIdAsync(string id, string? customErrorMessage = null)
     {
         if (!ObjectId.TryParse(id, out _))
-            return BadRequest("ID no válido");
+            return BadRequest("Invalid ID");
 
         try
         {
@@ -111,18 +111,18 @@ where T : class, IEntity
         }
         catch (KeyNotFoundException)
         {
-            return NotFound($"No se encontró el {_resourceName} con ID: {id}");
+            return NotFound($"{_resourceName} with ID {id} not found");
         }
         catch (Exception ex)
         {
-            var errorMessage = customErrorMessage ?? $"Error al obtener el {_resourceName} con ID: {id}";
+            var errorMessage = customErrorMessage ?? $"Error getting {_resourceName} with ID: {id}";
             _logger.LogError(ex, errorMessage);
             return StatusCode(500, errorMessage);
         }
     }
 
     /// <summary>
-    /// Crea un nuevo recurso
+    /// Creates a new resource
     /// </summary>
     protected virtual async Task<IActionResult> CreateAsync(T entity, string routeName, Func<T, object> routeValues)
     {
@@ -140,18 +140,18 @@ where T : class, IEntity
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, $"Error al crear un nuevo {_resourceName}");
-            return StatusCode(500, $"Error interno del servidor al crear el {_resourceName}");
+            _logger.LogError(ex, $"Error creating new {_resourceName}");
+            return StatusCode(500, $"Internal server error while creating {_resourceName}");
         }
     }
 
     /// <summary>
-    /// Actualiza un recurso existente
+    /// Updates an existing resource
     /// </summary>
     protected virtual async Task<ActionResult<T>> UpdateAsync(string id, T entity, Action<T>? beforeUpdate = null)
     {
         if (id != entity.Id)
-            return BadRequest($"El ID de la ruta no coincide con el ID del {_resourceName}");
+            return BadRequest($"Route ID does not match {_resourceName} ID");
 
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
@@ -173,18 +173,18 @@ where T : class, IEntity
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, $"Error al actualizar el {_resourceName} con ID: {id}");
-            return StatusCode(500, $"Error interno del servidor al actualizar el {_resourceName}");
+            _logger.LogError(ex, $"Error updating {_resourceName} with ID: {id}");
+            return StatusCode(500, $"Internal server error while updating {_resourceName}");
         }
     }
 
     /// <summary>
-    /// Elimina un recurso
+    /// Deletes a resource
     /// </summary>
     protected virtual async Task<IActionResult> DeleteAsync(string id)
     {
         if (!ObjectId.TryParse(id, out _))
-            return BadRequest("ID no válido");
+            return BadRequest("Invalid ID");
 
         try
         {
@@ -196,8 +196,8 @@ where T : class, IEntity
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, $"Error al eliminar el {_resourceName} con ID: {id}");
-            return StatusCode(500, $"Error interno del servidor al eliminar el {_resourceName}");
+            _logger.LogError(ex, $"Error deleting {_resourceName} with ID: {id}");
+            return StatusCode(500, $"Internal server error while deleting {_resourceName}");
         }
     }
 }

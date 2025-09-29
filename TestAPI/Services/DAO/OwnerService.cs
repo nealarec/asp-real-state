@@ -67,7 +67,7 @@ public class OwnerService : BaseService<Owner>
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al obtener la URL de la foto de perfil para el propietario {OwnerId}", owner.Id);
+                _logger.LogError(ex, "Error getting profile photo URL for owner {OwnerId}", owner.Id);
             }
         }
         return owner;

@@ -49,7 +49,7 @@ public abstract class BaseService<T> where T : class, IEntity
     public virtual async Task<T> GetAsync(string id)
     {
         var entity = await _collection.Find(x => x.Id == id).FirstOrDefaultAsync();
-        if (entity == null) throw new KeyNotFoundException($"No se encontró una entidad con el ID {id}");
+        if (entity == null) throw new KeyNotFoundException($"No entity found with ID {id}");
         return entity;
     }
 

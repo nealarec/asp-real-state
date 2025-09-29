@@ -21,20 +21,20 @@ public class OwnersController : ResourceController<Owner, OwnerService>
         PropertyService propertyService,
         ILogger<OwnersController> logger,
         IS3Service s3Service)
-        : base(ownerService, logger, "propietario")
+        : base(ownerService, logger, "owner")
     {
         _s3Service = s3Service;
         _propertyService = propertyService;
     }
 
     /// <summary>
-    /// Obtiene todos los propietarios con paginación y ordenamiento
+    /// Gets all owners with pagination and sorting
     /// </summary>
-    /// <param name="page">Número de página (por defecto: 1)</param>
-    /// <param name="pageSize">Tamaño de página (por defecto: 10, máximo: 100)</param>
-    /// <param name="search">Buscar por nombre</param>
-    /// <param name="sortBy">Campo por el que ordenar (name, birthday)</param>
-    /// <param name="sortOrder">Orden de clasificación (asc/desc)</param>
+    /// <param name="page">Page number (default: 1)</param>
+    /// <param name="pageSize">Page size (default: 10, max: 100)</param>
+    /// <param name="search">Search by name</param>
+    /// <param name="sortBy">Field to sort by (name, birthday)</param>
+    /// <param name="sortOrder">Sort order (asc/desc)</param>
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(PaginatedResponse<Owner>))]
     public async Task<ActionResult<PaginatedResponse<Owner>>> Get(
@@ -60,7 +60,7 @@ public class OwnersController : ResourceController<Owner, OwnerService>
             );
         }
 
-        // Mapear campos de ordenamiento
+        // Map sort fields
         string? sortField = sortBy?.ToLower() switch
         {
             "name" => "Name",
@@ -72,9 +72,9 @@ public class OwnersController : ResourceController<Owner, OwnerService>
     }
 
     /// <summary>
-    /// Obtiene un propietario por su ID
+    /// Gets an owner by ID
     /// </summary>
-    /// <param name="id">ID del propietario</param>
+    /// <param name="id">Owner ID</param>
     [HttpGet("{id:length(24)}", Name = "GetOwner")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Owner))]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -84,9 +84,9 @@ public class OwnersController : ResourceController<Owner, OwnerService>
     }
 
     /// <summary>
-    /// Obtiene las propiedades de un propietario
+    /// Gets properties owned by an owner
     /// </summary>
-    /// <param name="id">ID del propietario</param>
+    /// <param name="id">Owner ID</param>
     [HttpGet("{id:length(24)}/properties")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<Property>))]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -100,11 +100,11 @@ public class OwnersController : ResourceController<Owner, OwnerService>
         }
         catch (KeyNotFoundException)
         {
-            return NotFound($"No se encontró un propietario con ID: {id}");
+            return NotFound($"Owner with ID {id} not found");
         }
         catch (Exception ex)
         {
-            return StatusCode(500, $"Error al obtener las propiedades del propietario: {ex.Message}");
+            return StatusCode(500, $"Error getting owner properties: {ex.Message}");
         }
 
 
@@ -112,10 +112,10 @@ public class OwnersController : ResourceController<Owner, OwnerService>
 
 
     /// <summary>
-    /// Sube o actualiza la foto de perfil de un propietario
+    /// Uploads or updates an owner's profile photo
     /// </summary>
-    /// <param name="id">ID del propietario</param>
-    /// <param name="file">Archivo de imagen a subir</param>
+    /// <param name="id">Owner ID</param>
+    /// <param name="file">Image file to upload</param>
     [HttpPost("{id}/photo")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -125,28 +125,28 @@ public class OwnersController : ResourceController<Owner, OwnerService>
     {
         if (file == null || file.Length == 0)
         {
-            return BadRequest("No se ha proporcionado ningún archivo o está vacío");
+            return BadRequest("No file provided or file is empty");
         }
 
-        // Validar el tipo de archivo
+        // Validate file type
         var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
         var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
 
         if (string.IsNullOrEmpty(fileExtension) || !allowedExtensions.Contains(fileExtension))
         {
-            return BadRequest("Formato de archivo no válido. Se permiten solo imágenes JPG, JPEG, PNG o GIF.");
+            return BadRequest("Invalid file format. Only JPG, JPEG, PNG or GIF images are allowed.");
         }
 
         try
         {
-            // Verificar que el propietario existe
+            // Verify owner exists
             var owner = await _service.GetAsync(id);
             if (owner == null)
             {
-                return NotFound($"No se encontró un propietario con ID: {id}");
+                return NotFound($"Owner with ID {id} not found");
             }
 
-            // Eliminar la imagen anterior si existe
+            // Delete previous image if it exists
             if (!string.IsNullOrEmpty(owner.Photo))
             {
                 try
@@ -155,37 +155,37 @@ public class OwnersController : ResourceController<Owner, OwnerService>
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Error al eliminar la imagen anterior del propietario {OwnerId}", id);
-                    // Continuar con la carga de la nueva imagen aunque falle la eliminación de la anterior
+                    _logger.LogError(ex, "Error deleting previous image for owner {OwnerId}", id);
+                    // Continue with new image upload even if old image deletion fails
                 }
             }
 
-            // Subir la nueva imagen
+            // Upload the new image
             var prefix = $"owners/{id}";
             var uploadResult = await _s3Service.UploadFileAsync(file, BucketName, prefix);
 
-            // Actualizar la referencia de la foto en el propietario
+            // Update the photo reference in the owner
             owner.Photo = uploadResult.FileKey;
             await _service.UpdateAsync(id, owner);
 
-            // Devolver la URL de la foto
+            // Return the photo URL
             var photoUrl = _s3Service.GetPublicFileUrl(uploadResult.FileKey, BucketName);
 
             return Ok(new
             {
                 PhotoUrl = photoUrl,
-                Message = "Foto de perfil actualizada correctamente"
+                Message = "Profile photo updated successfully"
             });
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error al cargar la foto de perfil para el propietario {OwnerId}", id);
-            return StatusCode(500, "Error al procesar la solicitud");
+            _logger.LogError(ex, "Error uploading profile photo for owner {OwnerId}", id);
+            return StatusCode(500, "Error processing request");
         }
     }
 
     /// <summary>
-    /// Crea un nuevo propietario
+    /// Creates a new owner
     /// </summary>
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(Owner))]
@@ -196,9 +196,9 @@ public class OwnersController : ResourceController<Owner, OwnerService>
     }
 
     /// <summary>
-    /// Actualiza un propietario existente
+    /// Updates an existing owner
     /// </summary>
-    /// <param name="id">ID del propietario a actualizar</param>
+    /// <param name="id">ID of the owner to update</param>
     [HttpPut("{id:length(24)}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -209,9 +209,9 @@ public class OwnersController : ResourceController<Owner, OwnerService>
     }
 
     /// <summary>
-    /// Elimina un propietario
+    /// Deletes an owner
     /// </summary>
-    /// <param name="id">ID del propietario a eliminar</param>
+    /// <param name="id">ID of the owner to delete</param>
     [HttpDelete("{id:length(24)}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
