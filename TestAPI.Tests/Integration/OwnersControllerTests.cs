@@ -253,6 +253,7 @@ public class OwnersControllerTests : IntegrationTestBase
         // Verify the response content is not empty and contains the expected error message
         var content = await response.Content.ReadAsStringAsync();
         Assert.That(content, Is.Not.Null.Or.Empty);
-        Assert.That(content, Does.Contain("No owner found with ID"));
+        Assert.That(content, Does.Contain("Owner with ID"));
+        Assert.That(content, Does.Contain("not found"));
     }
 }

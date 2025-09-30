@@ -9,9 +9,9 @@ public class MockStorageService : IStorageService
     public string PropertyImageBucketName => "property-images";
     public string OwnerImageBucketName => "owner-images";
 
-    public Task<StorageService.FileUploadResult> UploadFileAsync(IFormFile file, string bucketName, string? prefix = null)
+    public Task<IStorageService.FileUploadResult> UploadFileAsync(IFormFile file, string bucketName, string? prefix = null)
     {
-        return Task.FromResult(new StorageService.FileUploadResult
+        return Task.FromResult(new IStorageService.FileUploadResult
         {
             FileKey = $"{prefix}/{file.FileName}",
             FileName = file.FileName,

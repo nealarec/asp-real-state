@@ -15,7 +15,7 @@ using TestAPI.Data;
 using TestAPI.Model;
 using TestAPI.Services;
 using TestAPI.Services.DAO;
-using TestAPI.Services.IStorageService;
+using TestAPI.Services.Storage;
 using TestAPI.Tests.Mocks;
 
 namespace TestAPI.Tests.Integration;
