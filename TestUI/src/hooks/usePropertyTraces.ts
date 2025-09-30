@@ -20,7 +20,7 @@ export const usePropertyTraces = (propertyId?: string) => {
   const propertyTraceQuery = (id: string) =>
     useQuery<PropertyTrace>({
       queryKey: ["property-trace", id],
-      queryFn: () => getPropertyTraceById(id),
+      queryFn: () => getPropertyTraceById(propertyId!, id),
       enabled: !!id,
     });
 
@@ -32,8 +32,8 @@ export const usePropertyTraces = (propertyId?: string) => {
   });
 
   const updatePropertyTraceMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<PropertyTrace> }) =>
-      updatePropertyTrace(id, data),
+    mutationFn: ({ id, data }: { id: string; data: PropertyTrace }) =>
+      updatePropertyTrace(propertyId!, id, data),
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ["property-traces", propertyId] });
       queryClient.invalidateQueries({ queryKey: ["property-trace", id] });
@@ -41,9 +41,10 @@ export const usePropertyTraces = (propertyId?: string) => {
   });
 
   const deletePropertyTraceMutation = useMutation({
-    mutationFn: deletePropertyTrace,
-    onSuccess: () => {
+    mutationFn: (id: string) => deletePropertyTrace(propertyId!, id),
+    onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: ["property-traces", propertyId] });
+      queryClient.invalidateQueries({ queryKey: ["property-trace", id] });
     },
   });
 

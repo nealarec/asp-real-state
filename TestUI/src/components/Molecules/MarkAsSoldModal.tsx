@@ -1,4 +1,4 @@
-import { Fragment } from "react";
+import { Fragment, useEffect } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { useForm, Controller } from "react-hook-form";
 import { format } from "date-fns";
@@ -11,11 +11,19 @@ import { type Property } from "@/schemas/Property";
 type MarkAsSoldModalProps = {
   property: Property;
   isOpen: boolean;
+  propertyTrace?: PropertyTrace | null;
+
   onClose: () => void;
   onConfirm: (data: PropertyTrace) => void;
 };
 
-export function MarkAsSoldModal({ property, isOpen, onClose, onConfirm }: MarkAsSoldModalProps) {
+export function MarkAsSoldModal({
+  property,
+  isOpen,
+  propertyTrace,
+  onClose,
+  onConfirm,
+}: MarkAsSoldModalProps) {
   const {
     control,
     handleSubmit,
@@ -23,7 +31,7 @@ export function MarkAsSoldModal({ property, isOpen, onClose, onConfirm }: MarkAs
     reset,
   } = useForm<PropertyTrace>({
     resolver: zodResolver(propertyTraceSchema),
-    defaultValues: {
+    defaultValues: propertyTrace || {
       value: 0,
       tax: 0,
       name: "",
@@ -31,8 +39,13 @@ export function MarkAsSoldModal({ property, isOpen, onClose, onConfirm }: MarkAs
     },
   });
 
+  useEffect(() => {
+    if (propertyTrace) {
+      reset(propertyTrace);
+    }
+  }, [propertyTrace]);
+
   const onSubmit = (data: PropertyTrace) => {
-    console.log(data);
     onConfirm(data);
     reset();
   };
@@ -129,7 +142,7 @@ export function MarkAsSoldModal({ property, isOpen, onClose, onConfirm }: MarkAs
                       Cancel
                     </Button>
                     <Button type="submit" variant="success">
-                      Mark as Sold
+                      {propertyTrace?.id ? "Update" : "Mark as Sold"}
                     </Button>
                   </div>
                 </form>

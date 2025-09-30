@@ -1,22 +1,21 @@
 import { format } from "date-fns";
-
-export interface PropertyTrace {
-  id?: string;
-  idPropertyTrace?: string;
-  idProperty?: string;
-  name: string;
-  dateSale?: string | Date;
-  value: number;
-  tax: number;
-  [key: string]: any; // Allow additional properties
-}
+import { FaEdit, FaTrash } from "react-icons/fa";
+import { Button } from "../Atoms/Button/Button";
+import type { PropertyTrace } from "@/schemas/PropertyTrace";
 
 interface PropertyHistoryProps {
   propertyTraces: PropertyTrace[];
   isLoading: boolean;
+  onEdit?: (trace: PropertyTrace) => void;
+  onDelete?: (trace: PropertyTrace) => void;
 }
 
-export const PropertyHistory = ({ propertyTraces, isLoading }: PropertyHistoryProps) => {
+export const PropertyHistory = ({
+  propertyTraces,
+  isLoading,
+  onEdit,
+  onDelete,
+}: PropertyHistoryProps) => {
   if (isLoading) {
     return (
       <div className="animate-pulse space-y-4">
@@ -34,12 +33,9 @@ export const PropertyHistory = ({ propertyTraces, isLoading }: PropertyHistoryPr
   return (
     <div className="space-y-4">
       {propertyTraces.map(trace => (
-        <div
-          key={trace.idPropertyTrace || trace.id}
-          className="border rounded-lg p-4 hover:shadow-md transition-shadow"
-        >
-          <div className="flex justify-between items-start">
-            <div>
+        <div key={trace.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+          <div className="flex justify-between items-start gap-4">
+            <div className="flex-1">
               <h3 className="font-medium">{trace.name}</h3>
               {trace.dateSale && (
                 <p className="text-sm text-gray-600">
@@ -53,6 +49,32 @@ export const PropertyHistory = ({ propertyTraces, isLoading }: PropertyHistoryPr
                 <p className="text-sm text-gray-600">Tax: ${trace.tax.toLocaleString()}</p>
               )}
             </div>
+            {(onEdit || onDelete) && (
+              <div className="flex flex-col sm:flex-row">
+                {onEdit && (
+                  <Button
+                    variant="warning"
+                    size="sm"
+                    onClick={() => onEdit(trace)}
+                    className="rounded-none rounded-t md:rounded-none md:rounded-l"
+                    aria-label="Edit property trace"
+                  >
+                    <FaEdit className="h-5 w-5" />
+                  </Button>
+                )}
+                {onDelete && trace.id && (
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    onClick={() => onDelete(trace)}
+                    className="rounded-none rounded-b md:rounded-none md:rounded-r"
+                    aria-label="Delete property trace"
+                  >
+                    <FaTrash className="h-5 w-5" />
+                  </Button>
+                )}
+              </div>
+            )}
           </div>
         </div>
       ))}

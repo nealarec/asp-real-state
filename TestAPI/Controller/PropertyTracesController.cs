@@ -141,7 +141,6 @@ public class PropertyTracesController : ResourceController<PropertyTrace, Proper
 
             // Assign the property to the trace
             trace.IdProperty = propertyId;
-            trace.DateSale = DateTime.UtcNow;
 
             var createdTrace = await _service.CreateAsync(trace);
             return CreatedAtAction(
@@ -199,7 +198,7 @@ public class PropertyTracesController : ResourceController<PropertyTrace, Proper
             existingTrace.DateSale = updatedTrace.DateSale;
 
             await _service.UpdateAsync(id, existingTrace);
-            return NoContent();
+            return Ok(existingTrace);
         }
         catch (Exception ex)
         {

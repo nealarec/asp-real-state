@@ -10,8 +10,11 @@ export const getPropertyTraces = async (propertyId: string): Promise<PropertyTra
   return response.json();
 };
 
-export const getPropertyTraceById = async (id: string): Promise<PropertyTrace> => {
-  const response = await fetch(`${API_BASE_URL}/property-traces/${id}`);
+export const getPropertyTraceById = async (
+  propertyId: string,
+  id: string
+): Promise<PropertyTrace> => {
+  const response = await fetch(`${API_BASE_URL}/properties/${propertyId}/traces/${id}`);
   if (!response.ok) {
     throw new Error("Error getting property trace");
   }
@@ -39,10 +42,11 @@ export const createPropertyTrace = async (
 };
 
 export const updatePropertyTrace = async (
+  propertyId: string,
   id: string,
   trace: Partial<PropertyTrace>
 ): Promise<PropertyTrace> => {
-  const response = await fetch(`${API_BASE_URL}/property-traces/${id}`, {
+  const response = await fetch(`${API_BASE_URL}/properties/${propertyId}/traces/${id}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -58,8 +62,8 @@ export const updatePropertyTrace = async (
   return response.json();
 };
 
-export const deletePropertyTrace = async (id: string): Promise<void> => {
-  const response = await fetch(`${API_BASE_URL}/property-traces/${id}`, {
+export const deletePropertyTrace = async (propertyId: string, id: string): Promise<void> => {
+  const response = await fetch(`${API_BASE_URL}/properties/${propertyId}/traces/${id}`, {
     method: "DELETE",
   });
 

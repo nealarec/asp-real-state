@@ -48,7 +48,10 @@ export const PropertyDetails = ({
         </div>
 
         <div className="w-full sm:w-auto">
-          <div className="inline-flex rounded-lg overflow-hidden shadow-sm border border-gray-200" role="group">
+          <div
+            className="inline-flex rounded-lg overflow-hidden shadow-sm border border-gray-200"
+            role="group"
+          >
             <Button
               variant="warning"
               size="sm"
@@ -79,9 +82,7 @@ export const PropertyDetails = ({
               leftIcon={FaTrash}
               title={isDeleting ? "Deleting..." : "Delete"}
             >
-              <span className="hidden sm:inline">
-                {isDeleting ? "Deleting..." : "Delete"}
-              </span>
+              <span className="hidden sm:inline">{isDeleting ? "Deleting..." : "Delete"}</span>
             </Button>
           </div>
         </div>

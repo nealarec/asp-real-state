@@ -5,31 +5,33 @@ import { usePropertyImages } from "@/hooks/usePropertyImages";
 import { useProperties } from "@/hooks/useProperties";
 import { useOwners } from "@/hooks/useOwners";
 import { usePropertyTraces } from "@/hooks/usePropertyTraces";
-import type { PropertyTrace } from "@/components/Organisms/PropertyHistory";
 import { DeleteConfirmation } from "@/components/Molecules/DeleteConfirmation";
 import { PropertyDetails } from "@/components/Organisms/PropertyDetails";
 import { PropertyHistory } from "@/components/Organisms/PropertyHistory";
 import type { Property } from "@/schemas/Property";
+import type { PropertyTrace } from "@/schemas/PropertyTrace";
+import toast from "react-hot-toast";
 
 export default function PropertyDetailPage() {
   const { id = "" } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [isMarkAsSoldModalOpen, setIsMarkAsSoldModalOpen] = useState(false);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [selectedTrace, setSelectedTrace] = useState<PropertyTrace | null>(null);
+  const [toDeleteTrace, setToDeleteTrace] = useState<PropertyTrace | null>(null);
 
   const { getProperty, deleteProperty, isDeleting } = useProperties();
   const { data: property, isLoading, error } = getProperty(id);
   const { data: images = [], isLoading: isLoadingImages } = usePropertyImages(id);
   const { data: owner, isLoading: isLoadingOwner } = useOwners().getOwner(property?.idOwner || "");
+
   const {
     propertyTraces = [],
     isLoading: isLoadingTraces,
     createPropertyTrace,
-  } = usePropertyTraces(id) as unknown as {
-    propertyTraces: PropertyTrace[];
-    isLoading: boolean;
-    createPropertyTrace: (data: Omit<PropertyTrace, "id">) => Promise<unknown>;
-  };
+    updatePropertyTrace,
+    deletePropertyTrace,
+  } = usePropertyTraces(id);
 
   const handleMarkAsSold = async (data: Omit<PropertyTrace, "id">) => {
     if (!property) return;
@@ -40,7 +42,11 @@ export default function PropertyDetailPage() {
         idProperty: property.id,
         dateSale: data["dateSale"] || new Date(),
       };
-      await (createPropertyTrace as any)(traceData);
+      if (selectedTrace?.id) {
+        await updatePropertyTrace({ id: selectedTrace.id, data: traceData });
+      } else {
+        await createPropertyTrace(traceData);
+      }
       setIsMarkAsSoldModalOpen(false);
       // Refresh the page to show the new trace
       navigate(0);
@@ -52,6 +58,18 @@ export default function PropertyDetailPage() {
 
   const handleDeleteClick = () => {
     setShowDeleteConfirmation(true);
+  };
+
+  const handleDeleteTrace = () => {
+    if (!toDeleteTrace?.id) return;
+    deletePropertyTrace(toDeleteTrace.id, {
+      onSuccess: () => {
+        setToDeleteTrace(null);
+      },
+      onError: () => {
+        toast.error("Error deleting property trace");
+      },
+    });
   };
 
   const handleConfirmDelete = async () => {
@@ -106,14 +124,26 @@ export default function PropertyDetailPage() {
 
       <div className="mt-8 bg-white p-6 rounded-lg shadow-md">
         <h2 className="text-xl font-semibold mb-4">Property History</h2>
-        <PropertyHistory propertyTraces={propertyTraces} isLoading={isLoadingTraces} />
+        <PropertyHistory
+          propertyTraces={propertyTraces}
+          isLoading={isLoadingTraces}
+          onEdit={trace => {
+            setSelectedTrace(trace);
+            setIsMarkAsSoldModalOpen(true);
+          }}
+          onDelete={setToDeleteTrace}
+        />
       </div>
 
       <MarkAsSoldModal
         isOpen={isMarkAsSoldModalOpen}
-        onClose={() => setIsMarkAsSoldModalOpen(false)}
+        onClose={() => {
+          setIsMarkAsSoldModalOpen(false);
+          setSelectedTrace(null);
+        }}
         onConfirm={handleMarkAsSold}
         property={property as unknown as Property} // Temporary type assertion
+        propertyTrace={selectedTrace}
       />
 
       <DeleteConfirmation
@@ -122,6 +152,16 @@ export default function PropertyDetailPage() {
         onCancel={handleCancelDelete}
         title="Delete Property"
         message="Are you sure you want to delete this property? This action cannot be undone."
+        confirmText={isDeleting ? "Deleting..." : "Delete"}
+        cancelText="Cancel"
+        isLoading={isDeleting}
+      />
+      <DeleteConfirmation
+        isOpen={toDeleteTrace !== null}
+        onConfirm={() => handleDeleteTrace()}
+        onCancel={() => setToDeleteTrace(null)}
+        title="Delete Property Trace"
+        message={`Are you sure you want to delete this property trace: ${toDeleteTrace?.name}? This action cannot be undone.`}
         confirmText={isDeleting ? "Deleting..." : "Delete"}
         cancelText="Cancel"
         isLoading={isDeleting}
