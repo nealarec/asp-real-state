@@ -79,6 +79,8 @@ export function OwnerSelect({
 
   const handleSelect = useCallback(
     (owner: Owner) => {
+      if (!owner.id) return;
+
       onChange(owner.id);
       setSelectedOwner(owner);
       setIsOpen(false);
@@ -162,9 +164,9 @@ export function OwnerSelect({
           className="w-full text-base px-3 py-2 border rounded-lg"
           autoFocus
         />
-        <button 
+        <button
           type="button"
-          onClick={(e) => {
+          onClick={e => {
             e.preventDefault();
             e.stopPropagation();
             toggleDropdown();

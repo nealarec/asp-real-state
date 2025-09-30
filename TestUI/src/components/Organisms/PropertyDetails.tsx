@@ -3,6 +3,7 @@ import type { Owner } from "@/schemas/Owner";
 import { FaEdit, FaTrash, FaCheckCircle } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/Atoms/Button/Button";
+import { PropertyImageGallery } from "../Molecules/PropertyImageGallery";
 
 interface PropertyImage {
   id: string;
@@ -94,19 +95,7 @@ export const PropertyDetails = ({
           {isLoadingImages ? (
             <div className="aspect-video bg-gray-100 rounded-lg animate-pulse"></div>
           ) : images && images.length > 0 ? (
-            <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden">
-              {images[0]?.fileUrl ? (
-                <img
-                  src={images[0].fileUrl}
-                  alt={property.name}
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <div className="h-full w-full flex items-center justify-center text-gray-400">
-                  No image available
-                </div>
-              )}
-            </div>
+            <PropertyImageGallery images={images} />
           ) : (
             <div className="aspect-video bg-gray-100 rounded-lg flex items-center justify-center">
               <span className="text-gray-400">No images available</span>

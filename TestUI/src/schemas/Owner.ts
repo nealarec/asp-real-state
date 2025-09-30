@@ -1,11 +1,10 @@
 import { z } from "zod";
 
 export const ownerSchema = z.object({
-  id: z.string(),
-  idOwner: z.string(),
+  id: z.string().optional(),
   name: z.string().min(1, "Name is required"),
   address: z.string().min(1, "Address is required"),
-  photo: z.string().url("Must be a valid URL").optional(),
+  photo: z.string().optional(),
   birthday: z.string().or(z.date()).pipe(z.coerce.date()),
 });
 

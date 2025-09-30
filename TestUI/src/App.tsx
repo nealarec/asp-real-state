@@ -9,6 +9,7 @@ import OwnerDetailPage from "./pages/owners/OwnerDetailPage";
 import PropertiesPage from "./pages/properties/PropertiesPage";
 import PropertyDetailPage from "./pages/properties/PropertyDetailPage";
 import PropertyFormPage from "./pages/properties/PropertyFormPage";
+import { Toaster } from "react-hot-toast";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -105,6 +106,7 @@ const App: React.FC = () => {
         </AppRoutes>
       </div>
       <ReactQueryDevtools initialIsOpen={false} position="bottom" />
+      <Toaster position="top-center" reverseOrder={false} />
     </QueryClientProvider>
   );
 };

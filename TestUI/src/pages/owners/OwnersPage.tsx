@@ -1,75 +1,82 @@
-import { useState, useEffect } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useOwners } from "@/hooks/useOwners";
-import { OwnerCard } from "@/components/Molecules/OwnerCard";
 import { Button } from "@/components/Atoms/Button";
 import { Pagination } from "@/components/Organisms/Pagination";
 import { OwnerFilters } from "@/components/Molecules/OwnerFilters";
+import { OwnerCard } from "@/components/Molecules/OwnerCard";
+import { OwnerFormModal } from "@/components/Molecules/OwnerFormModal";
+import type { Owner } from "@/schemas/Owner";
+import toast from "react-hot-toast";
 
 export default function OwnersPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [page, setPage] = useState(1);
   const [pageSize] = useState(24);
   const [searchTerm, setSearchTerm] = useState(searchParams.get("search") || "");
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
-  // Update URL when search term changes
-  useEffect(() => {
-    const params = new URLSearchParams(searchParams);
-    if (debouncedSearchTerm) {
-      params.set("search", debouncedSearchTerm);
-      setPage(1); // Reset to first page on new search
-    } else {
-      params.delete("search");
-    }
-    setSearchParams(params, { replace: true });
-  }, [debouncedSearchTerm, searchParams, setSearchParams]);
-
-  // Debounce search term
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm);
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [searchTerm]);
-
-  const {
-    data: ownersData,
-    isLoading,
-    error,
-  } = useOwners({
+  const { data, isLoading, createOwner } = useOwners({
     page,
     pageSize,
-    ...(debouncedSearchTerm ? { search: debouncedSearchTerm } : {}),
+    search: searchTerm,
   });
 
-  if (error) return <div>Error: {error.message}</div>;
-
-  const { data: owners = [], totalCount = 0 } = ownersData || {};
+  const owners = data?.data || [];
+  const totalCount = data?.totalCount || 0;
   const totalPages = Math.ceil(totalCount / pageSize);
 
   const handlePageChange = (newPage: number) => {
     setPage(newPage);
   };
 
+  const handleCreateOwner = async (ownerData: Owner, cbSuccess: () => void) => {
+    try {
+      await createOwner(ownerData, {
+        onSuccess: () => {
+          cbSuccess();
+        },
+        onError: () => {
+          toast.error("Failed to create owner. Please try again.");
+        },
+      });
+    } catch (error) {
+      console.error("Error creating owner:", error);
+      toast.error("Failed to create owner. Please try again.");
+      return Promise.reject(error);
+    }
+  };
   return (
     <div className="container mx-auto p-4">
+      <OwnerFormModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSubmit={handleCreateOwner}
+      />
       <div className="flex flex-col space-y-4 mb-6">
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold">Property Owners</h1>
-          <Link to="/owners/new">
-            <Button>Add New Owner</Button>
-          </Link>
+          <Button onClick={() => setIsCreateModalOpen(true)}>Add New Owner</Button>
         </div>
 
         <OwnerFilters
           searchTerm={searchTerm}
           onSearchChange={setSearchTerm}
-          onSearch={() => setDebouncedSearchTerm(searchTerm)}
+          onSearch={() => {
+            // Update the URL when searching
+            const params = new URLSearchParams(searchParams);
+            if (searchTerm) {
+              params.set("search", searchTerm);
+            } else {
+              params.delete("search");
+            }
+            setSearchParams(params);
+          }}
           onClear={() => {
             setSearchTerm("");
-            setDebouncedSearchTerm("");
+            const params = new URLSearchParams(searchParams);
+            params.delete("search");
+            setSearchParams(params);
           }}
         />
       </div>

@@ -91,8 +91,8 @@ export const useOwners = (params?: Partial<PaginationParams>) => {
     getOwnerProperties,
 
     // Mutations
-    createOwner: create as (owner: Omit<Owner, "id">) => Promise<Owner>,
-    updateOwner: (id: string, data: Partial<Owner>) => update({ id, data }),
+    createOwner: create,
+    updateOwner: update,
     deleteOwner: remove,
 
     // Mutation status
