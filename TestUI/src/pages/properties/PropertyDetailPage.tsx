@@ -1,128 +1,131 @@
-import { useParams, Link } from "react-router-dom";
-import placeholderImage from "@/assets/house-placeholder.svg";
-import { PropertyImageGallery } from "@/components/Molecules/PropertyImageGallery";
+import { useState } from "react";
+import { useParams, useNavigate, Link } from "react-router-dom";
+import { MarkAsSoldModal } from "@/components/Molecules/MarkAsSoldModal";
 import { usePropertyImages } from "@/hooks/usePropertyImages";
 import { useProperties } from "@/hooks/useProperties";
 import { useOwners } from "@/hooks/useOwners";
-import type { Owner } from "@/schemas/Owner";
+import { usePropertyTraces } from "@/hooks/usePropertyTraces";
+import type { PropertyTrace } from "@/components/Organisms/PropertyHistory";
+import { DeleteConfirmation } from "@/components/Molecules/DeleteConfirmation";
+import { PropertyDetails } from "@/components/Organisms/PropertyDetails";
+import { PropertyHistory } from "@/components/Organisms/PropertyHistory";
+import type { Property } from "@/schemas/Property";
 
 export default function PropertyDetailPage() {
   const { id = "" } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const [isMarkAsSoldModalOpen, setIsMarkAsSoldModalOpen] = useState(false);
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
 
-  const { data: property, isLoading, error } = useProperties().getProperty(id);
+  const { getProperty, deleteProperty, isDeleting } = useProperties();
+  const { data: property, isLoading, error } = getProperty(id);
   const { data: images = [], isLoading: isLoadingImages } = usePropertyImages(id);
   const { data: owner, isLoading: isLoadingOwner } = useOwners().getOwner(property?.idOwner || "");
+  const {
+    propertyTraces = [],
+    isLoading: isLoadingTraces,
+    createPropertyTrace,
+  } = usePropertyTraces(id) as unknown as {
+    propertyTraces: PropertyTrace[];
+    isLoading: boolean;
+    createPropertyTrace: (data: Omit<PropertyTrace, "id">) => Promise<unknown>;
+  };
 
+  const handleMarkAsSold = async (data: Omit<PropertyTrace, "id">) => {
+    if (!property) return;
+
+    try {
+      const traceData = {
+        ...data,
+        idProperty: property.id,
+        dateSale: data["dateSale"] || new Date(),
+      };
+      await (createPropertyTrace as any)(traceData);
+      setIsMarkAsSoldModalOpen(false);
+      // Refresh the page to show the new trace
+      navigate(0);
+    } catch (error) {
+      console.error("Error marking property as sold:", error);
+      // In a real app, you might want to show an error toast/message here
+    }
+  };
+
+  const handleDeleteClick = () => {
+    setShowDeleteConfirmation(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!property) return;
+
+    try {
+      await deleteProperty(property.id);
+      // Redirect to properties list after successful deletion
+      navigate("/properties");
+    } catch (error) {
+      console.error("Error deleting property:", error);
+      // In a real app, show error toast/message
+    } finally {
+      setShowDeleteConfirmation(false);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteConfirmation(false);
+  };
+
+  const handleEditProperty = () => {
+    if (property) {
+      navigate(`/properties/edit/${property.id}`);
+    }
+  };
+
+  // Early return if property is not loaded yet
   if (isLoading) return <div className="p-4">Loading property...</div>;
   if (error) return <div className="p-4">Error loading property</div>;
   if (!property) return <div className="p-4">Property not found</div>;
 
-  // Use existing images array directly since it already includes the cover image
-  const allImages = images;
-
   return (
-    <div className="p-4">
-      <Link to="/properties" className="text-blue-600 hover:underline mb-4 inline-block">
+    <div className="p-4 space-y-8">
+      <Link to="/properties" className="text-blue-600 hover:underline inline-block">
         &larr; Back to Properties
       </Link>
 
-      <div className="bg-white p-6 rounded-lg shadow-md">
-        <div className="flex justify-between items-start mb-6">
-          <div>
-            <h1 className="text-2xl font-bold">{property.name}</h1>
-            <p className="text-gray-600">{property.address}</p>
+      {property && (
+        <PropertyDetails
+          property={property}
+          isLoadingImages={isLoadingImages}
+          images={images || []}
+          isLoadingOwner={isLoadingOwner}
+          owner={owner || null}
+          isDeleting={isDeleting}
+          onEdit={handleEditProperty}
+          onDelete={handleDeleteClick}
+          onMarkAsSold={() => setIsMarkAsSoldModalOpen(true)}
+        />
+      )}
 
-            {isLoadingOwner && (
-              <div className="mt-2 text-sm text-gray-500">Loading owner info...</div>
-            )}
-          </div>
-
-          <div className="flex gap-4 justify-end">
-            <Link
-              to={`/properties/edit/${property.id}`}
-              className="bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600 transition-colors"
-            >
-              Edit
-            </Link>
-            <button
-              className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors"
-              onClick={() => {
-                // Lógica para eliminar
-                if (confirm("Are you sure you want to delete this property?")) {
-                  // Llamada a la API para eliminar
-                }
-              }}
-            >
-              Delete
-            </button>
-          </div>
-        </div>
-
-        {/* Main Content */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Image Gallery */}
-          <div className="mb-8">
-            {isLoadingImages ? (
-              <div className="aspect-video bg-gray-100 rounded-lg animate-pulse"></div>
-            ) : allImages.length > 0 ? (
-              <PropertyImageGallery images={allImages} />
-            ) : (
-              <div className="aspect-video bg-gray-100 rounded-lg flex items-center justify-center">
-                <img
-                  src={placeholderImage}
-                  alt="No images available"
-                  className="h-full w-full object-contain p-8 opacity-20"
-                />
-              </div>
-            )}
-          </div>
-
-          <div>
-            <span className="text-xl font-semibold text-green-700">
-              ${property.price.toLocaleString()}
-            </span>
-            <div className="mb-6">
-              <h2 className="text-lg font-semibold mb-2">Description</h2>
-              <p className="text-gray-700 md:min-h-[100px]">
-                {property.name || "No description available."}
-              </p>
-            </div>
-            <div className="flex flex-col sm:flex-row gap-4 mb-6">
-              <div className="w-full sm:w-1/3">
-                <h3 className="text-sm font-medium text-gray-500">Year</h3>
-                <p>{property.year}</p>
-              </div>
-              <div>
-                <h3 className="text-sm font-medium text-gray-500">Owner</h3>
-                {property.idOwner ? (
-                  <Link
-                    to={`/owners/${property.idOwner}`}
-                    className="text-blue-600 hover:underline"
-                  >
-                    {owner && (
-                      <div className="mt-2 flex  items-center gap-2">
-                        {owner.photo && (
-                          <img
-                            src={owner.photo}
-                            alt="Owner"
-                            className="mt-2 h-16 w-16 rounded-full object-cover"
-                          />
-                        )}
-                        <p className="text-sm text-gray-600">
-                          <span className="font-semibold">{owner.name}</span>
-                          <span className="block">{owner.address}</span>
-                        </p>
-                      </div>
-                    )}
-                  </Link>
-                ) : (
-                  <p>Not available</p>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
+      <div className="mt-8 bg-white p-6 rounded-lg shadow-md">
+        <h2 className="text-xl font-semibold mb-4">Property History</h2>
+        <PropertyHistory propertyTraces={propertyTraces} isLoading={isLoadingTraces} />
       </div>
+
+      <MarkAsSoldModal
+        isOpen={isMarkAsSoldModalOpen}
+        onClose={() => setIsMarkAsSoldModalOpen(false)}
+        onConfirm={handleMarkAsSold}
+        property={property as unknown as Property} // Temporary type assertion
+      />
+
+      <DeleteConfirmation
+        isOpen={showDeleteConfirmation}
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+        title="Delete Property"
+        message="Are you sure you want to delete this property? This action cannot be undone."
+        confirmText={isDeleting ? "Deleting..." : "Delete"}
+        cancelText="Cancel"
+        isLoading={isDeleting}
+      />
     </div>
   );
 }

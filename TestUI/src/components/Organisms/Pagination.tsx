@@ -1,4 +1,5 @@
 import { FiChevronLeft, FiChevronRight, FiMoreHorizontal } from "react-icons/fi";
+import { Button } from "../Atoms/Button/Button";
 
 interface PaginationProps {
   currentPage: number;
@@ -28,21 +29,18 @@ const PaginationItem = ({
   isArrow?: boolean;
 }) => (
   <li className={`${active ? "active" : ""} ${disabled ? "disabled" : ""}`}>
-    <button
-      className={`px-2 py-1 text-sm sm:px-3 sm:py-1.5 md:mx-0.5 min-w-[32px] sm:min-w-[38px] text-center rounded border transition-all ${
-        active
-          ? "bg-blue-600 border-blue-600 text-white"
-          : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-      } ${disabled ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-100"} ${
-        isArrow ? "h-full flex items-center justify-center" : ""
-      } ${className}`}
+    <Button
+      type="button"
+      variant={active ? "primary" : "outline"}
+      size="sm"
+      className={`min-w-[32px] sm:min-w-[38px] ${isArrow ? "px-2" : "px-3"} ${className}`}
       onClick={() => !disabled && onClick(page)}
       disabled={disabled}
       aria-current={active ? "page" : undefined}
       aria-disabled={disabled}
     >
       {children}
-    </button>
+    </Button>
   </li>
 );
 

@@ -1,74 +1,51 @@
 import { Link } from "react-router-dom";
-import { useState, useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { useProperties } from "@/hooks/useProperties";
+import { useFilterReducer } from "@/hooks/useFilterReducer";
 import PropertyCard, { PropertyListSkeleton } from "@/components/Molecules/PropertyCard";
 import { Pagination } from "@/components/Organisms/Pagination";
-import {
-  PropertyFilters,
-  MIN_YEAR,
-  MAX_YEAR,
-  MIN_PRICE,
-  MAX_PRICE,
-} from "@/components/Molecules/PropertyFilters";
-import type { PropertyFilters as PropertyFiltersType } from "@/components/Molecules/PropertyFilters";
+import { PropertyFilters } from "@/components/Molecules/PropertyFilters";
+import type { Property } from "@/schemas/Property";
+import { useDebounce } from "@/hooks/useDebounce";
 
-export default function PropertiesPage() {
-  const [page, setPage] = useState(1);
-  const [filters, setFilters] = useState<Partial<PropertyFiltersType>>({});
-  const { metadata, isMetadataLoading } = useProperties();
+interface PropertiesPageProps {
+  pageSize?: number;
+}
 
-  const { properties, isLoading, error } = useProperties({
-    page,
-    pageSize: 18,
-    ...filters,
+export default function PropertiesPage({ pageSize = 18 }: PropertiesPageProps) {
+  // Initialize filter reducer with default values
+  const { state: filterState, actions } = useFilterReducer({
+    pageSize,
   });
 
-  const handleFilterChange = useCallback((newFilters: PropertyFiltersType) => {
-    setPage(1); // Reset to first page when filters change
+  const debouncedFilterState = useDebounce(filterState, 500);
 
-    // Create a new filters object with only defined values
-    const updatedFilters: Partial<PropertyFiltersType> = {};
+  // Fetch properties using filters
+  const {
+    properties,
+    isLoading: isPropertiesLoading,
+    metadata: apiMetadata,
+  } = useProperties(debouncedFilterState);
 
-    if (newFilters.search) updatedFilters.search = newFilters.search;
-    if (newFilters.ownerId) updatedFilters.ownerId = newFilters.ownerId;
-    if (newFilters.minPrice !== undefined) updatedFilters.minPrice = newFilters.minPrice;
-    if (newFilters.maxPrice !== undefined) updatedFilters.maxPrice = newFilters.maxPrice;
-    if (newFilters.minYear !== undefined) updatedFilters.minYear = newFilters.minYear;
-    if (newFilters.maxYear !== undefined) updatedFilters.maxYear = newFilters.maxYear;
-    if (newFilters.codeInternal) updatedFilters.codeInternal = newFilters.codeInternal;
+  // Update metadata when it's loaded from the API
+  useEffect(() => {
+    if (apiMetadata) {
+      actions.setMetadata(apiMetadata);
+    }
+  }, [apiMetadata, actions]);
 
-    setFilters(updatedFilters);
-  }, []);
+  const isLoading = isPropertiesLoading;
 
-  if (error) {
-    return (
-      <div className="container mx-auto p-4">
-        <div className="flex flex-col space-y-4 mb-6">
-          <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold">Properties</h1>
-            <Link
-              to="/properties/new"
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Add Property
-            </Link>
-          </div>
-          <PropertyFilters
-            onFilterChange={handleFilterChange}
-            initialFilters={{
-              minPrice: metadata?.priceRange?.min ?? MIN_PRICE,
-              maxPrice: metadata?.priceRange?.max ?? MAX_PRICE,
-              minYear: metadata?.yearRange?.min ?? MIN_YEAR,
-              maxYear: metadata?.yearRange?.max ?? MAX_YEAR,
-            }}
-            isLoading={isMetadataLoading}
-          />
-        </div>
-        <div className="p-4 text-red-500">Error loading properties: {error.message}</div>
-      </div>
-    );
-  }
+  // Handle page change
+  const handlePageChange = useCallback(
+    (newPage: number) => {
+      actions.setPage(newPage);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    },
+    [actions]
+  );
 
+  // Reset all filters
   return (
     <div className="container mx-auto p-4">
       <div className="flex flex-col space-y-4 mb-6">
@@ -81,39 +58,28 @@ export default function PropertiesPage() {
             Add Property
           </Link>
         </div>
-        <PropertyFilters
-          onFilterChange={handleFilterChange}
-          initialFilters={{
-            minPrice: metadata?.priceRange?.min ?? MIN_PRICE,
-            maxPrice: metadata?.priceRange?.max ?? MAX_PRICE,
-            minYear: metadata?.yearRange?.min ?? MIN_YEAR,
-            maxYear: metadata?.yearRange?.max ?? MAX_YEAR,
-          }}
-          isLoading={isMetadataLoading}
-        />
+        <PropertyFilters state={filterState} actions={actions} />
       </div>
 
-      {isLoading ? (
-        <PropertyListSkeleton count={6} />
+      {isLoading && !properties?.data?.length ? (
+        <PropertyListSkeleton count={filterState.pageSize} />
       ) : (
-        <div className="grid grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 mb-6 auto-rows-fr">
-          {properties?.data?.map((property: any) => (
-            <Link to={`/properties/${property.id}`}>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 mb-6">
+          {properties?.data?.map((property: Property) => (
+            <Link key={property.id} to={`/properties/${property.id}`} className="block h-full">
               <PropertyCard property={property} />
             </Link>
           ))}
         </div>
       )}
 
-      {!isLoading && (
-        <Pagination
-          currentPage={page}
-          totalPages={properties?.totalPages}
-          totalItems={properties?.totalCount}
-          pageSize={properties?.pageSize}
-          onPageChange={setPage}
-        />
-      )}
+      <Pagination
+        currentPage={filterState.page}
+        totalItems={properties?.totalCount || 0}
+        totalPages={properties?.totalPages || 0}
+        pageSize={filterState.pageSize}
+        onPageChange={handlePageChange}
+      />
     </div>
   );
 }

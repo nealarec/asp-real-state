@@ -3,7 +3,7 @@ import type { ButtonHTMLAttributes } from "react";
 import type { IconType } from "react-icons";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "primary" | "secondary" | "outline" | "ghost" | "danger";
+  variant?: "primary" | "secondary" | "outline" | "ghost" | "danger" | "warning" | "success";
   size?: "sm" | "md" | "lg";
   isLoading?: boolean;
   leftIcon?: IconType;
@@ -31,6 +31,8 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       primary: "bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500",
       secondary: "bg-gray-600 text-white hover:bg-gray-700 focus:ring-gray-500",
       danger: "bg-red-600 text-white hover:bg-red-700 focus:ring-red-500",
+      warning: "bg-yellow-500 text-white hover:bg-yellow-600 focus:ring-yellow-400",
+      success: "bg-green-500 text-white hover:bg-green-600 focus:ring-green-400",
       outline:
         "bg-transparent border border-gray-300 text-gray-700 hover:bg-gray-50 focus:ring-blue-500",
       ghost: "bg-transparent text-gray-700 hover:bg-gray-100 focus:ring-blue-500",

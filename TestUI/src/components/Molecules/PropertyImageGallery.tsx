@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { FiX, FiChevronLeft, FiChevronRight } from "react-icons/fi";
+import { Button } from "../Atoms/Button/Button";
 
 interface ImageItem {
   id: string;
@@ -72,21 +73,23 @@ export function PropertyImageGallery({ images = [], className = "" }: PropertyIm
       {/* Lightbox */}
       {lightboxOpen && images[mainImageIndex] && (
         <div className="fixed inset-0 z-50 bg-black bg-opacity-90 flex items-center justify-center p-4">
-          <button
+          <Button
+            type="button"
+            variant="ghost"
             onClick={closeLightbox}
-            className="absolute top-4 right-4 text-white text-2xl"
+            className="absolute top-4 right-4 text-white hover:bg-white/10 p-2"
             aria-label="Close gallery"
-          >
-            <FiX size={32} />
-          </button>
+            leftIcon={FiX}
+          />
 
-          <button
+          <Button
+            type="button"
+            variant="ghost"
             onClick={goToPrevious}
-            className="absolute left-4 p-2 text-white text-2xl"
+            className="absolute left-4 p-2 text-white hover:bg-white/10"
             aria-label="Previous image"
-          >
-            <FiChevronLeft size={32} />
-          </button>
+            leftIcon={FiChevronLeft}
+          />
 
           <div className="max-w-4xl w-full">
             <img
@@ -99,13 +102,14 @@ export function PropertyImageGallery({ images = [], className = "" }: PropertyIm
             </div>
           </div>
 
-          <button
+          <Button
+            type="button"
+            variant="ghost"
             onClick={goToNext}
-            className="absolute right-4 p-2 text-white text-2xl"
+            className="absolute right-4 p-2 text-white hover:bg-white/10"
             aria-label="Next image"
-          >
-            <FiChevronRight size={32} />
-          </button>
+            leftIcon={FiChevronRight}
+          />
         </div>
       )}
     </div>

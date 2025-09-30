@@ -1,94 +1,23 @@
-import { useState, useEffect } from "react";
-import { useForm, Controller } from "react-hook-form";
-import { useDebounce } from "@/hooks/useDebounce";
+import { useState } from "react";
 import { OwnerSelect } from "@/components/Molecules/OwnerSelect";
 import Input from "@/components/Atoms/Form/Input";
 import { Button } from "@/components/Atoms/Button";
 import { Slider } from "@/components/Atoms/Form/Slider";
 import { FaFilter, FaSearch, FaTimes } from "react-icons/fa";
 import { useIsMobile } from "@/hooks/useIsMobile";
+import type { FilterState, FilterActions } from "@/hooks/useFilterReducer";
 
-interface PropertyFiltersProps {
-  onFilterChange: (filters: PropertyFilters) => void;
-  initialFilters?: Partial<PropertyFilters>;
-  isLoading?: boolean;
-}
-
-export interface PropertyFilters {
-  search: string;
-  ownerId: string;
-  minPrice: number;
-  maxPrice: number;
-  minYear: number;
-  maxYear: number;
-  codeInternal: string;
-}
-
-// Default values in case metadata is not available
-export const MIN_YEAR = 1900;
-export const MAX_YEAR = new Date().getFullYear() + 1;
-export const MIN_PRICE = 0;
-export const MAX_PRICE = 10000000; // 10M
-
-export function PropertyFilters({
-  onFilterChange,
-  initialFilters = {},
-  isLoading = false,
-}: PropertyFiltersProps) {
-  // Use metadata from initialFilters or fallback to defaults
-  const minPrice = initialFilters.minPrice ?? MIN_PRICE;
-  const maxPrice = initialFilters.maxPrice ?? MAX_PRICE;
-  const minYear = initialFilters.minYear ?? MIN_YEAR;
-  const maxYear = initialFilters.maxYear ?? MAX_YEAR;
-
-  // Show loading state
-  if (isLoading) {
-    return (
-      <div className="animate-pulse space-y-4 p-4 bg-gray-50 rounded-lg">
-        <div className="h-6 bg-gray-200 rounded w-1/4"></div>
-        <div className="space-y-4">
-          <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-        </div>
-      </div>
-    );
-  }
-  const isMobile = useIsMobile();
+export const PropertyFilters = ({
+  state,
+  actions,
+}: {
+  state: FilterState;
+  actions: FilterActions;
+}) => {
   const [showFilters, setShowFilters] = useState(false);
+  const isMobile = useIsMobile();
 
-  const { control, watch, reset, setValue } = useForm<PropertyFilters>({
-    defaultValues: {
-      search: initialFilters.search ?? "",
-      ownerId: initialFilters.ownerId ?? "",
-      minPrice: minPrice,
-      maxPrice: maxPrice,
-      minYear: minYear,
-      maxYear: maxYear,
-    },
-  });
-
-  // Watch all form values
-  const filters = watch();
-  const debouncedFilters = useDebounce(filters, 500);
-
-  // Notify parent component about filter changes
-  useEffect(() => {
-    onFilterChange(debouncedFilters);
-  }, [debouncedFilters, onFilterChange]);
-
-  const handleReset = () => {
-    reset({
-      search: "",
-      ownerId: "",
-      minPrice: minPrice,
-      maxPrice: maxPrice,
-      minYear: minYear,
-      maxYear: maxYear,
-      codeInternal: "",
-    });
-  };
-
-  const hasActiveFilters = Object.entries(watch()).some(
+  const hasActiveFilters = Object.entries(state).some(
     ([key, value]) => key !== "search" && value !== ""
   );
 
@@ -96,28 +25,23 @@ export function PropertyFilters({
     <div className="space-y-4">
       <div className="flex items-center gap-4">
         <div className="flex-1 space-y-1">
-          <Controller
-            name="search"
-            control={control}
-            render={({ field }) => (
-              <div className="relative flex-1">
-                <FaSearch className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                <Input
-                  type="text"
-                  placeholder="Search owners by name..."
-                  className="pl-10 pr-10 p-3 w-full"
-                  containerClassName=""
-                  {...field}
-                />
-                {field.value && (
-                  <FaTimes
-                    className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 cursor-pointer hover:text-gray-600"
-                    onClick={handleReset}
-                  />
-                )}
-              </div>
+          <div className="relative flex-1">
+            <FaSearch className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <Input
+              type="text"
+              placeholder="Search owners by name..."
+              className="pl-10 pr-10 p-3 w-full"
+              containerClassName=""
+              value={state.search}
+              onChange={e => actions.setSearch(e.target.value)}
+            />
+            {state.search && (
+              <FaTimes
+                className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 cursor-pointer hover:text-gray-600"
+                onClick={() => actions.setSearch("")}
+              />
             )}
-          />
+          </div>
         </div>
         <div>
           <Button
@@ -149,40 +73,25 @@ export function PropertyFilters({
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200 animate-in fade-in">
           <div className="space-y-1">
             <label className="block text-sm font-medium text-gray-700">Owner</label>
-            <Controller
-              name="ownerId"
-              control={control}
-              render={({ field }) => (
-                <OwnerSelect value={field.value} onChange={field.onChange} className="w-full" />
-              )}
-            />
+            <OwnerSelect value={state.ownerId} onChange={actions.setOwnerId} className="w-full" />
           </div>
 
           <div className="space-y-1">
             <label className="block text-sm font-medium text-gray-700">Price Range</label>
             <div className="px-2">
-              <Controller
-                name="minPrice"
-                control={control}
-                render={({ field }) => (
-                  <Slider
-                    min={MIN_PRICE}
-                    max={MAX_PRICE}
-                    step={1000}
-                    value={[field.value, watch("maxPrice")]}
-                    onValueChange={([min, max]) => {
-                      if (typeof min === "number" && typeof max === "number") {
-                        setValue("minPrice", min);
-                        setValue("maxPrice", max);
-                      }
-                    }}
-                    className="w-full"
-                  />
-                )}
+              <Slider
+                min={state.metadata.priceRange.min}
+                max={state.metadata.priceRange.max}
+                step={1000}
+                value={[state.minPrice, state.maxPrice]}
+                onValueChange={([min, max]) => {
+                  actions.setPriceRange(min, max);
+                }}
+                className="w-full"
               />
               <div className="flex justify-between text-xs text-gray-500 mt-1">
-                <span>${watch("minPrice").toLocaleString()}</span>
-                <span>${watch("maxPrice").toLocaleString()}</span>
+                <span>${state.minPrice?.toLocaleString()}</span>
+                <span>${state.maxPrice?.toLocaleString()}</span>
               </div>
             </div>
           </div>
@@ -190,34 +99,32 @@ export function PropertyFilters({
           <div className="space-y-1">
             <label className="block text-sm font-medium text-gray-700">Year Built</label>
             <div className="px-2">
-              <Controller
-                name="minYear"
-                control={control}
-                render={({ field }) => (
-                  <Slider
-                    min={MIN_YEAR}
-                    max={MAX_YEAR}
-                    step={1}
-                    value={[field.value, watch("maxYear")]}
-                    onValueChange={([min, max]) => {
-                      if (typeof min === "number" && typeof max === "number") {
-                        setValue("minYear", min);
-                        setValue("maxYear", max);
-                      }
-                    }}
-                    className="w-full"
-                  />
-                )}
+              <Slider
+                min={state.metadata.yearRange.min}
+                max={state.metadata.yearRange.max}
+                step={1}
+                value={[state.minYear, state.maxYear]}
+                onValueChange={([min, max]) => {
+                  if (typeof min === "number" && typeof max === "number") {
+                    actions.setYearRange(min, max);
+                  }
+                }}
+                className="w-full"
               />
               <div className="flex justify-between text-xs text-gray-500 mt-1">
-                <span>{watch("minYear")}</span>
-                <span>{watch("maxYear")}</span>
+                <span>{state.minYear}</span>
+                <span>{state.maxYear}</span>
               </div>
             </div>
           </div>
 
           <div className="col-span-full">
-            <Button type="button" variant="secondary" onClick={handleReset} className="w-full">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => actions.resetFilters()}
+              className="w-full"
+            >
               Reset Filters
             </Button>
           </div>
@@ -231,20 +138,15 @@ export function PropertyFilters({
       <div className="flex items-center gap-4">
         <div className="flex-1 space-y-1">
           <label className="block text-sm font-medium text-gray-700">Search</label>
-          <Controller
-            name="search"
-            control={control}
-            render={({ field }) => (
-              <div className="relative">
-                <Input
-                  {...field}
-                  type="text"
-                  placeholder="Search properties..."
-                  className="w-full bg-white"
-                />
-              </div>
-            )}
-          />
+          <div className="relative">
+            <Input
+              type="text"
+              placeholder="Search properties..."
+              className="w-full bg-white"
+              value={state.search}
+              onChange={e => actions.setSearch(e.target.value)}
+            />
+          </div>
         </div>
         <Button
           type="button"
@@ -275,40 +177,25 @@ export function PropertyFilters({
         <div className="space-y-4 p-4 bg-gray-50 rounded-lg border border-gray-200 animate-in fade-in">
           <div className="space-y-1">
             <label className="block text-sm font-medium text-gray-700">Owner</label>
-            <Controller
-              name="ownerId"
-              control={control}
-              render={({ field }) => (
-                <OwnerSelect value={field.value} onChange={field.onChange} className="w-full" />
-              )}
-            />
+            <OwnerSelect value={state.ownerId} onChange={actions.setOwnerId} className="w-full" />
           </div>
 
           <div className="space-y-1">
             <label className="block text-sm font-medium text-gray-700">Price Range</label>
             <div className="px-2">
-              <Controller
-                name="minPrice"
-                control={control}
-                render={({ field }) => (
-                  <Slider
-                    min={MIN_PRICE}
-                    max={MAX_PRICE}
-                    step={1000}
-                    value={[field.value, watch("maxPrice")]}
-                    onValueChange={([min, max]) => {
-                      if (typeof min === "number" && typeof max === "number") {
-                        setValue("minPrice", min);
-                        setValue("maxPrice", max);
-                      }
-                    }}
-                    className="w-full"
-                  />
-                )}
+              <Slider
+                min={state.metadata.priceRange.min}
+                max={state.metadata.priceRange.max}
+                step={1000}
+                value={[state.minPrice, state.maxPrice]}
+                onValueChange={([min, max]) => {
+                  actions.setPriceRange(min, max);
+                }}
+                className="w-full"
               />
               <div className="flex justify-between text-xs text-gray-500 mt-1">
-                <span>${watch("minPrice").toLocaleString()}</span>
-                <span>${watch("maxPrice").toLocaleString()}</span>
+                <span>${state.minPrice.toLocaleString()}</span>
+                <span>${state.maxPrice.toLocaleString()}</span>
               </div>
             </div>
           </div>
@@ -316,33 +203,31 @@ export function PropertyFilters({
           <div className="space-y-1">
             <label className="block text-sm font-medium text-gray-700">Year Built</label>
             <div className="px-2">
-              <Controller
-                name="minYear"
-                control={control}
-                render={({ field }) => (
-                  <Slider
-                    min={MIN_YEAR}
-                    max={MAX_YEAR}
-                    step={1}
-                    value={[field.value, watch("maxYear")]}
-                    onValueChange={([min, max]) => {
-                      if (typeof min === "number" && typeof max === "number") {
-                        setValue("minYear", min);
-                        setValue("maxYear", max);
-                      }
-                    }}
-                    className="w-full"
-                  />
-                )}
+              <Slider
+                min={state.metadata.yearRange.min}
+                max={state.metadata.yearRange.max}
+                step={1}
+                value={[state.minYear, state.maxYear]}
+                onValueChange={([min, max]) => {
+                  if (typeof min === "number" && typeof max === "number") {
+                    actions.setYearRange(min, max);
+                  }
+                }}
+                className="w-full"
               />
               <div className="flex justify-between text-xs text-gray-500 mt-1">
-                <span>{watch("minYear")}</span>
-                <span>{watch("maxYear")}</span>
+                <span>{state.minYear}</span>
+                <span>{state.maxYear}</span>
               </div>
             </div>
           </div>
 
-          <Button type="button" variant="secondary" onClick={handleReset} className="w-full">
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={actions.resetFilters}
+            className="w-full"
+          >
             Reset Filters
           </Button>
         </div>
@@ -351,4 +236,4 @@ export function PropertyFilters({
   );
 
   return isMobile ? renderMobileFilters() : renderDesktopFilters();
-}
+};
