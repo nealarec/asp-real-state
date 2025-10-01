@@ -2,6 +2,12 @@
 
 A full-stack application for managing real estate properties, owners, and property traces. Built with .NET 8 for the backend and React with TypeScript for the frontend.
 
+## Demo Video
+
+[![Restate Demo](https://img.youtube.com/vi/0gw_jd2cobA/0.jpg)](https://www.youtube.com/watch?v=0gw_jd2cobA)
+
+Click the image above to watch the demo video on YouTube.
+
 ## Tech Stack
 
 ### Backend
