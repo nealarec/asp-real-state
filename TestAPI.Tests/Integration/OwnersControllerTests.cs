@@ -28,7 +28,7 @@ public class OwnersControllerTests : IntegrationTestBase
         var testOwner = await CreateTestOwner();
 
         // Act
-        var response = await Client.GetAsync("/api/owners?page=1&pageSize=10");
+        var response = await _client.GetAsync("/api/owners?page=1&pageSize=10");
         var result = await response.Content.ReadFromJsonAsync<PaginatedResponse<Owner>>();
 
         // Assert
@@ -48,7 +48,7 @@ public class OwnersControllerTests : IntegrationTestBase
         var testOwner = await CreateTestOwner();
 
         // Act
-        var response = await Client.GetAsync($"/api/owners/{testOwner.Id}");
+        var response = await _client.GetAsync($"/api/owners/{testOwner.Id}");
         var owner = await response.Content.ReadFromJsonAsync<Owner>();
 
         // Assert
@@ -65,7 +65,7 @@ public class OwnersControllerTests : IntegrationTestBase
         var invalidId = "507f1f77bcf86cd799439011"; // ID de MongoDB válido pero que no existe
 
         // Act
-        var response = await Client.GetAsync($"/api/owners/{invalidId}");
+        var response = await _client.GetAsync($"/api/owners/{invalidId}");
 
         // Assert
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
@@ -79,7 +79,7 @@ public class OwnersControllerTests : IntegrationTestBase
         var testOwner = await CreateTestOwner("Nelson Mandela");
 
         // Act
-        var response = await Client.GetAsync($"/api/owners?search={testOwner.Name}&page=1&pageSize=10");
+        var response = await _client.GetAsync($"/api/owners?search={testOwner.Name}&page=1&pageSize=10");
         var result = await response.Content.ReadFromJsonAsync<PaginatedResponse<Owner>>();
 
         // Assert
@@ -99,7 +99,7 @@ public class OwnersControllerTests : IntegrationTestBase
         var testOwner = await CreateTestOwner("Natalia Vargas");
 
         // Act
-        var response = await Client.GetAsync($"/api/owners?search=Natalia&page=1&pageSize=10");
+        var response = await _client.GetAsync($"/api/owners?search=Natalia&page=1&pageSize=10");
         var result = await response.Content.ReadFromJsonAsync<PaginatedResponse<Owner>>();
 
         // Assert
@@ -125,7 +125,7 @@ public class OwnersControllerTests : IntegrationTestBase
         };
 
         // Act
-        var response = await Client.PostAsJsonAsync("/api/owners", newOwner);
+        var response = await _client.PostAsJsonAsync("/api/owners", newOwner);
         var createdOwner = await response.Content.ReadFromJsonAsync<Owner>();
 
         // Assert
@@ -151,7 +151,7 @@ public class OwnersControllerTests : IntegrationTestBase
         };
 
         // Act
-        var response = await Client.PutAsJsonAsync($"/api/owners/{testOwner.Id}", updatedOwner);
+        var response = await _client.PutAsJsonAsync($"/api/owners/{testOwner.Id}", updatedOwner);
         var result = await response.Content.ReadFromJsonAsync<Owner>();
 
         // Assert
@@ -175,7 +175,7 @@ public class OwnersControllerTests : IntegrationTestBase
         };
 
         // Act
-        var response = await Client.PutAsJsonAsync($"/api/owners/{nonExistentId}", updatedOwner);
+        var response = await _client.PutAsJsonAsync($"/api/owners/{nonExistentId}", updatedOwner);
 
         // Assert
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
@@ -188,10 +188,10 @@ public class OwnersControllerTests : IntegrationTestBase
         var testOwner = await CreateTestOwner("Propietario a Eliminar");
 
         // Act
-        var deleteResponse = await Client.DeleteAsync($"/api/owners/{testOwner.Id}");
+        var deleteResponse = await _client.DeleteAsync($"/api/owners/{testOwner.Id}");
 
         // Verificar que el propietario ya no existe
-        var getResponse = await Client.GetAsync($"/api/owners/{testOwner.Id}");
+        var getResponse = await _client.GetAsync($"/api/owners/{testOwner.Id}");
 
         // Assert
         Assert.That(deleteResponse.StatusCode, Is.EqualTo(HttpStatusCode.NoContent));
@@ -205,7 +205,7 @@ public class OwnersControllerTests : IntegrationTestBase
         var nonExistentId = "507f1f77bcf86cd799439011"; // Valid MongoDB ID that doesn't exist
 
         // Act
-        var response = await Client.DeleteAsync($"/api/owners/{nonExistentId}");
+        var response = await _client.DeleteAsync($"/api/owners/{nonExistentId}");
 
         // Assert
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
@@ -227,7 +227,7 @@ public class OwnersControllerTests : IntegrationTestBase
         await CreateTestProperty("Otra Propiedad", "Calle 789", otherOwner.Id);
 
         // Act
-        var response = await Client.GetAsync($"/api/owners/{owner.Id}/properties");
+        var response = await _client.GetAsync($"/api/owners/{owner.Id}/properties");
         var properties = await response.Content.ReadFromJsonAsync<Property[]>();
 
         // Assert
@@ -245,7 +245,7 @@ public class OwnersControllerTests : IntegrationTestBase
         var nonExistentId = "507f1f77bcf86cd799439011"; // Valid MongoDB ID that doesn't exist
 
         // Act
-        var response = await Client.GetAsync($"/api/owners/{nonExistentId}/properties");
+        var response = await _client.GetAsync($"/api/owners/{nonExistentId}/properties");
 
         // Assert
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.NotFound));

@@ -30,7 +30,7 @@ public class PropertiesControllerTests : IntegrationTestBase
         await CreateTestProperty("Test Property 2", owner.Id);
 
         // Act
-        var response = await Client.GetAsync("/api/properties?page=1&pageSize=10");
+        var response = await _client.GetAsync("/api/properties?page=1&pageSize=10");
         var result = await response.Content.ReadFromJsonAsync<PaginatedResponse<Property>>();
 
         // Assert
@@ -50,7 +50,7 @@ public class PropertiesControllerTests : IntegrationTestBase
         var testProperty = await CreateTestProperty("Test Property", owner.Id);
 
         // Act
-        var response = await Client.GetAsync($"/api/properties/{testProperty.Id}");
+        var response = await _client.GetAsync($"/api/properties/{testProperty.Id}");
         var property = await response.Content.ReadFromJsonAsync<Property>();
 
         // Assert
@@ -66,7 +66,7 @@ public class PropertiesControllerTests : IntegrationTestBase
         var invalidId = "507f1f77bcf86cd799439011"; // Valid ID that doesn't exist
 
         // Act
-        var response = await Client.GetAsync($"/api/properties/{invalidId}");
+        var response = await _client.GetAsync($"/api/properties/{invalidId}");
 
         // Assert
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
@@ -88,15 +88,15 @@ public class PropertiesControllerTests : IntegrationTestBase
         };
 
         // Act
-        var response = await Client.PostAsJsonAsync("/api/properties", newProperty);
-        
+        var response = await _client.PostAsJsonAsync("/api/properties", newProperty);
+
         // Debug: Print response content
         var responseContent = await response.Content.ReadAsStringAsync();
         Console.WriteLine($"Response Content: {responseContent}");
-        
+
         // Assert status code first
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.Created), $"Expected Created (201) but got {response.StatusCode}. Response: {responseContent}");
-        
+
         // Try to deserialize
         var createdProperty = await response.Content.ReadFromJsonAsync<Property>();
         Assert.That(createdProperty, Is.Not.Null, "Failed to deserialize response to Property");
@@ -123,27 +123,27 @@ public class PropertiesControllerTests : IntegrationTestBase
         };
 
         // Act
-        var response = await Client.PutAsJsonAsync($"/api/properties/{testProperty.Id}", updatedProperty);
-        
+        var response = await _client.PutAsJsonAsync($"/api/properties/{testProperty.Id}", updatedProperty);
+
         // Debug: Print response content
         var responseContent = await response.Content.ReadAsStringAsync();
         Console.WriteLine($"Update Response Content: {responseContent}");
-        
+
         // Assert status code first
-        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK), 
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK),
             $"Expected OK (200) but got {response.StatusCode}. Response: {responseContent}");
-        
+
         // Try to deserialize the response
         var updated = await response.Content.ReadFromJsonAsync<Property>();
-        
+
         // If deserialization fails, try to get the property from the database
         if (updated == null)
         {
             Console.WriteLine("Failed to deserialize update response. Trying to get the property directly...");
-            var getResponse = await Client.GetAsync($"/api/properties/{testProperty.Id}");
+            var getResponse = await _client.GetAsync($"/api/properties/{testProperty.Id}");
             updated = await getResponse.Content.ReadFromJsonAsync<Property>();
         }
-        
+
         // Verify the updated properties
         Assert.That(updated, Is.Not.Null, "Failed to get updated property");
         Assert.That(updated!.Name, Is.EqualTo("Updated Test Property"));
@@ -158,13 +158,13 @@ public class PropertiesControllerTests : IntegrationTestBase
         var testProperty = await CreateTestProperty("Test Property to Delete", owner.Id);
 
         // Act
-        var response = await Client.DeleteAsync($"/api/properties/{testProperty.Id}");
+        var response = await _client.DeleteAsync($"/api/properties/{testProperty.Id}");
 
         // Assert
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.NoContent));
 
         // Verify it no longer exists
-        var getResponse = await Client.GetAsync($"/api/properties/{testProperty.Id}");
+        var getResponse = await _client.GetAsync($"/api/properties/{testProperty.Id}");
         Assert.That(getResponse.StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
     }
 
@@ -180,7 +180,7 @@ public class PropertiesControllerTests : IntegrationTestBase
         await CreateTestProperty("Property 3", owner2.Id);
 
         // Act
-        var response = await Client.GetAsync($"/api/properties?ownerId={owner1.Id}&page=1&pageSize=10");
+        var response = await _client.GetAsync($"/api/properties?ownerId={owner1.Id}&page=1&pageSize=10");
         var result = await response.Content.ReadFromJsonAsync<PaginatedResponse<Property>>();
 
         // Assert
@@ -204,7 +204,7 @@ public class PropertiesControllerTests : IntegrationTestBase
         await CreateTestProperty("Downtown Apartment", owner.Id, "789 City St");
 
         // Act - Search by name
-        var response1 = await Client.GetAsync("/api/properties?search=Beach&page=1&pageSize=10");
+        var response1 = await _client.GetAsync("/api/properties?search=Beach&page=1&pageSize=10");
         var result1 = await response1.Content.ReadFromJsonAsync<PaginatedResponse<Property>>();
 
         // Assert
@@ -218,7 +218,7 @@ public class PropertiesControllerTests : IntegrationTestBase
         Assert.That(result1.TotalCount, Is.EqualTo(1));
 
         // Act - Search by address
-        var response2 = await Client.GetAsync("/api/properties?search=Mountain&page=1&pageSize=10");
+        var response2 = await _client.GetAsync("/api/properties?search=Mountain&page=1&pageSize=10");
         var result2 = await response2.Content.ReadFromJsonAsync<PaginatedResponse<Property>>();
 
         // Assert
@@ -232,7 +232,7 @@ public class PropertiesControllerTests : IntegrationTestBase
         Assert.That(result2.TotalCount, Is.EqualTo(1));
     }
 
-    private async Task<Property> CreateTestProperty(string name, string ownerId, string address = "123 Test St")
+    private new async Task<Property> CreateTestProperty(string name, string ownerId, string address = "123 Test St")
     {
         var property = new Property
         {

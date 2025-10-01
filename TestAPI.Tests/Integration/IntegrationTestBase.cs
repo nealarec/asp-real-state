@@ -27,9 +27,8 @@ public abstract class IntegrationTestBase : IDisposable
     protected readonly ILoggerFactory _loggerFactory;
     protected readonly MongoDBService _mongoDBService;
     protected readonly IStorageService _mockStorageService;
-    protected readonly IConfiguration _configuration;
-    protected WebApplicationFactory<Program> Factory { get; private set; }
-    protected HttpClient Client { get; private set; }
+    protected WebApplicationFactory<Program> _factory { get; private set; }
+    protected HttpClient _client { get; private set; }
 
     protected IntegrationTestBase()
     {
@@ -44,7 +43,7 @@ public abstract class IntegrationTestBase : IDisposable
         _mockStorageService = new MockStorageService();
 
         // Configure WebApplicationFactory
-        Factory = new WebApplicationFactory<Program>()
+        _factory = new WebApplicationFactory<Program>()
             .WithWebHostBuilder(builder =>
             {
                 // Configure services
@@ -71,7 +70,7 @@ public abstract class IntegrationTestBase : IDisposable
             });
 
         // Create HTTP client
-        Client = Factory.CreateClient();
+        _client = _factory.CreateClient();
 
         // Configure services for unit testing
         var services = new ServiceCollection();
@@ -139,7 +138,7 @@ public abstract class IntegrationTestBase : IDisposable
         return owner;
     }
 
-    protected async Task<Property> CreateTestProperty(string name = "Test Property", string address = "456 Test Ave", string ownerId = null)
+    protected async Task<Property> CreateTestProperty(string name = "Test Property", string address = "456 Test Ave", string ownerId = "")
     {
         var property = new Property
         {
@@ -160,8 +159,8 @@ public abstract class IntegrationTestBase : IDisposable
         {
             _mongoDbRunner?.Dispose();
             _loggerFactory?.Dispose();
-            Client?.Dispose();
-            Factory?.Dispose();
+            _client?.Dispose();
+            _factory?.Dispose();
         }
     }
 
