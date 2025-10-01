@@ -3,6 +3,12 @@ version: "3.8"
 services:
   mongo_db:
     image: mongo:8.0-noble
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.runCommand({ ping: 1 })"]
+      start_period: 5s
+      interval: 10s
+      timeout: 5s
+      retries: 5
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: example
@@ -20,9 +26,11 @@ services:
       ME_CONFIG_MONGODB_SERVER: mongo_db
       ME_CONFIG_MONGODB_ADMINUSERNAME: root
       ME_CONFIG_MONGODB_ADMINPASSWORD: example
-      ME_CONFIG_BASICAUTH_ENABLED: false
+      ME_CONFIG_BASICAUTH_USERNAME: none
+      ME_CONFIG_BASICAUTH_PASSWORD: none
     depends_on:
-      - mongo_db
+      mongo_db:
+        condition: service_healthy
 
   minio:
     image: minio/minio

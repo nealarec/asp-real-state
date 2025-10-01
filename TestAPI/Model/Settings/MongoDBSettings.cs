@@ -1,4 +1,4 @@
-namespace TestAPI.Data;
+namespace TestAPI.Model.Settings;
 
 public class MongoDBSettings
 {

@@ -5,7 +5,7 @@ using Amazon.S3.Transfer;
 using Microsoft.Extensions.Options;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Processing;
-using TestAPI.Model;
+using TestAPI.Model.Settings;
 
 namespace TestAPI.Services.Storage;
 

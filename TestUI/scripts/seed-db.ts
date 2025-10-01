@@ -132,6 +132,14 @@ interface Property {
   coverImageUrl?: string;
 }
 
+interface PropertyTrace {
+  idProperty: string;
+  dateSale: string;
+  name: string;
+  value: number;
+  tax: number;
+}
+
 // Create a new owner
 async function createOwner(ownerData: Partial<Owner> = {}): Promise<string> {
   const owner: Omit<Owner, "photo"> = {
@@ -187,14 +195,46 @@ async function createProperty(
 
 // Add images to a property
 async function addPropertyImages(propertyId: string, count: number): Promise<void> {
-  for (let i = 0; i < count; i++) {
+  const uploadUrl = `${API_BASE_URL}/properties/${propertyId}/images`;
+
+  // Create an array of image upload promises
+  const uploadPromises = Array.from({ length: count }, async (_, index) => {
+    const imageUrl = getRandomImageUrl();
+    await uploadImageFromUrl(imageUrl, uploadUrl, "file");
+    console.log(`  - Added image ${index + 1}/${count} to property ${propertyId}`);
+  });
+
+  // Execute all uploads in parallel
+  await Promise.all(uploadPromises);
+}
+
+// Add traces to a property
+async function addPropertyTraces(propertyId: string, count: number): Promise<void> {
+  const tracesUrl = `${API_BASE_URL}/properties/${propertyId}/traces`;
+
+  // Create an array of trace creation promises
+  const tracePromises = Array.from({ length: count }, async (_, index) => {
+    const traceData: PropertyTrace = {
+      idProperty: propertyId,
+      dateSale: faker.date.past(5).toISOString(),
+      name: `Trace ${index + 1} for property ${propertyId}`,
+      value: faker.number.float({ min: 10000, max: 1000000, precision: 2 }),
+      tax: faker.number.float({ min: 100, max: 10000, precision: 2 }),
+    };
+
     try {
-      const imageUrl = getRandomImageUrl();
-      await uploadImageFromUrl(imageUrl, `${API_BASE_URL}/properties/${propertyId}/images`, "file");
+      await axios.post(tracesUrl, traceData);
+      console.log(`  - Added trace ${index + 1}/${count} to property ${propertyId}`);
     } catch (error) {
-      console.error(`Error adding image ${i + 1} to property ${propertyId}:`, error);
+      console.error(
+        `  - Failed to add trace ${index + 1} to property ${propertyId}:`,
+        error.message
+      );
     }
-  }
+  });
+
+  // Execute all trace creations in parallel
+  await Promise.all(tracePromises);
 }
 
 // Process a single owner with their properties and images
@@ -233,6 +273,12 @@ async function processOwner(ownerIndex: number) {
 
             console.log(`[Owner ${ownerNum}] Adding ${numImages} images to property ${propertyId}`);
             await addPropertyImages(propertyId, numImages);
+
+            // Add 1-5 traces to the property
+            const numTraces = faker.number.int({ min: 1, max: 5 });
+            console.log(`[Owner ${ownerNum}] Adding ${numTraces} traces to property ${propertyId}`);
+            await addPropertyTraces(propertyId, numTraces);
+
             return propertyId;
           })
       );

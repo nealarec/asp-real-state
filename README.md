@@ -20,7 +20,7 @@ A full-stack application for managing real estate properties, owners, and proper
 - ASP.NET Core Web API
 - MongoDB for data storage
 - MinIO for S3-compatible object storage
-- xUnit for testing
+- NUnit for testing
 
 ### Frontend
 
@@ -82,7 +82,7 @@ This will start:
    dotnet run
    ```
 
-   The API will be available at `https://localhost:5001`
+   The API will be available at `https://localhost:5248`
 
 ### 4. Configure and run the frontend
 
@@ -104,7 +104,7 @@ This will start:
    npm run dev
    ```
 
-   The frontend will be available at `http://localhost:5173`
+   The frontend will be available at `http://localhost:3000`
 
 ### 5. Seed the database (optional)
 
@@ -147,12 +147,14 @@ This project includes a Makefile with commands to simplify deployment to Azure A
 ### Deployment Steps
 
 1. **Clone the repository** (if not already done):
+
    ```bash
    git clone <repository-url>
    cd dotnet-state
    ```
 
 2. **Deploy to Azure**:
+
    ```bash
    # Install frontend dependencies and build
    # Publish the backend
@@ -162,6 +164,7 @@ This project includes a Makefile with commands to simplify deployment to Azure A
    ```
 
    This will:
+
    - Create necessary Azure resources if they don't exist
    - Build the frontend and backend
    - Configure application settings
@@ -170,16 +173,19 @@ This project includes a Makefile with commands to simplify deployment to Azure A
 ### Other Useful Commands
 
 - **Provision only Azure resources**:
+
   ```bash
   make provision
   ```
 
 - **Update application settings**:
+
   ```bash
   make config
   ```
 
 - **Test Azure resources**:
+
   ```bash
   make test
   ```

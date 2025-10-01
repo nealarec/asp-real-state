@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
-using TestAPI.Data;
+using TestAPI.Model.Settings;
 
 namespace TestAPI.Services
 {

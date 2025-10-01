@@ -1,4 +1,4 @@
-namespace TestAPI.Model;
+namespace TestAPI.Model.Settings;
 
 public class S3Settings
 {
