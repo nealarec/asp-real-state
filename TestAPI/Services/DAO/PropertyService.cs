@@ -57,7 +57,7 @@ public class PropertyService : BaseService<Property>
         return props;
     }
 
-    public override async Task<List<Property>> GetAsync(FilterDefinition<Property> filter = null)
+    public override async Task<List<Property>> GetAsync(FilterDefinition<Property> filter)
     {
         var props = await base.GetAsync(filter);
 

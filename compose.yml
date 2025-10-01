@@ -26,8 +26,8 @@ services:
       ME_CONFIG_MONGODB_SERVER: mongo_db
       ME_CONFIG_MONGODB_ADMINUSERNAME: root
       ME_CONFIG_MONGODB_ADMINPASSWORD: example
-      ME_CONFIG_BASICAUTH_USERNAME: none
-      ME_CONFIG_BASICAUTH_PASSWORD: none
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: supersecret
     depends_on:
       mongo_db:
         condition: service_healthy

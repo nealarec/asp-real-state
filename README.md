@@ -1,6 +1,38 @@
-# Real Estate Management System
+# Restate: Real Estate Management System
 
 A full-stack application for managing real estate properties, owners, and property traces. Built with .NET 8 for the backend and React with TypeScript for the frontend.
+
+## Tech Stack
+
+### Backend
+
+- .NET 8.0
+- ASP.NET Core Web API
+- IoC Container
+- Service Pattern
+- Data Object Pattern (DAO)
+
+### Frontend
+
+- React 18 with TypeScript
+- Vite for build tooling
+- Tailwind CSS for styling
+- React Hook Form for form handling
+- React Query for data fetching
+
+### Infrastructure (Local)
+
+- Docker (Docker Compose)
+- MongoDB
+- MinIO (S3-compatible storage)
+
+### Infrastructure (Azure)
+
+We have production ready script for Azure deployment. 😃 set the makefile variables and run `make deploy`.
+
+- Azure App Service
+- Azure Cosmos DB (MongoDB API)
+- Azure Storage Account
 
 ## Features
 
@@ -12,45 +44,20 @@ A full-stack application for managing real estate properties, owners, and proper
 - **Modern UI**: Responsive React frontend with Tailwind CSS
 - **Containerized**: Easy setup with Docker Compose
 
-## Tech Stack
+## Getting Started
 
-### Backend
-
-- .NET 8.0
-- ASP.NET Core Web API
-- MongoDB for data storage
-- MinIO for S3-compatible object storage
-- NUnit for testing
-
-### Frontend
-
-- React 18 with TypeScript
-- Vite for build tooling
-- Tailwind CSS for styling
-- React Hook Form for form handling
-- React Query for data fetching
-
-### Infrastructure
-
-- Docker
-- Docker Compose
-- MongoDB
-- MinIO (S3-compatible storage)
-
-## Prerequisites
+### Prerequisites
 
 - [.NET 8.0 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
 - [Node.js](https://nodejs.org/) (v18 or later)
 - [Docker](https://www.docker.com/get-started/)
 - [Docker Compose](https://docs.docker.com/compose/install/)
 
-## Getting Started
-
 ### 1. Clone the repository
 
 ```bash
-git clone <repository-url>
-cd dotnet-state
+git clone git@github.com:nealarec/asp-real-state.git restate
+cd restate
 ```
 
 ### 2. Start the infrastructure
@@ -61,9 +68,13 @@ docker-compose -f compose.yml up -d
 
 This will start:
 
-- MongoDB on port 27017
-- MongoDB Express (admin UI) on port 8081
-- MinIO (S3-compatible storage) on ports 9000 (API) and 9001 (Console)
+- MongoDB on port http://localhost:27017
+- MongoDB Express (admin UI) on port http://localhost:8081
+  - Username: `admin`
+  - Password: `supersecret`
+- MinIO (S3-compatible storage) on ports http://localhost:9000 (API) and http://localhost:9001 (Console)
+  - Access Key: `admin`
+  - Secret Key: `supersecret`
 
 ### 3. Configure and run the backend
 
@@ -89,7 +100,7 @@ This will start:
 1. Navigate to the TestUI directory:
 
    ```bash
-   cd ../TestUI
+   cd TestUI
    ```
 
 2. Install dependencies:
@@ -117,7 +128,7 @@ make seed
 # Or manually run the seed script
 cd TestUI
 npm install
-npm run seed
+npm run seed -- --owners=1500
 ```
 
 ## API Documentation
@@ -132,12 +143,12 @@ https://localhost:5001/swagger
 
 This project includes a Makefile with commands to simplify deployment to Azure App Service. The deployment process sets up the following resources:
 
-- **Azure App Service**: Hosts the .NET 8 Web API
+- **Azure App Service**: Hosts the .NET 8 Web API Linux
 - **Azure Cosmos DB (MongoDB API)**: Database service
 - **Azure Storage Account**: For file storage
 - **Resource Group**: To manage all resources together
 
-### Prerequisites
+### Prerequisites for Azure Deployment
 
 1. [Azure CLI](https://docs.microsoft.com/cli/azure/install-azure-cli) installed
 2. Logged in to Azure (`az login`)
@@ -191,6 +202,7 @@ This project includes a Makefile with commands to simplify deployment to Azure A
   ```
 
 - **Clean up all resources** (use with caution):
+
   ```bash
   make destroy
   ```
@@ -204,7 +216,11 @@ The following settings are automatically configured during deployment:
 - `S3Settings__ServiceURL`: Storage account endpoint
 - `S3Settings__AccessKey`: Storage account name
 - `S3Settings__SecretKey`: Storage account access key
-- `S3Settings__Region`: Azure region (default: eastus)
+- `S3Settings__Region`: Azure region (default: brazilsouth)
+- `Storage__UseAzureBlob`: Use Azure Blob Storage (default: true)
+- `AzureBlobSettings__ConnectionString`: Azure Blob Storage connection string
+- `AzureBlobSettings__ServiceUrl`: Azure Blob Storage service URL
+- `AzureBlobSettings__PublicBaseUrl`: Azure Blob Storage public base URL
 
 ## Testing
 
@@ -257,6 +273,7 @@ The following settings are automatically configured during deployment:
    ```
 
 4. Run tests with coverage:
+
    ```bash
    npm test -- --coverage
    ```
@@ -271,12 +288,20 @@ The following settings are automatically configured during deployment:
     "ConnectionString": "mongodb://root:example@localhost:27017",
     "DatabaseName": "RealEstateDB"
   },
+  "Storage": {
+    "UseAzureBlob": true
+  },
   "S3Settings": {
     "ServiceURL": "http://localhost:9000",
     "AccessKey": "admin",
     "SecretKey": "supersecret",
     "UseHttp": true,
     "ForcePathStyle": true
+  },
+  "AzureBlobSettings": {
+    "ConnectionString": "DefaultEndpointsProtocol=https;AccountName=teststoragealpha013;AccountKey=your-storage-account-key;EndpointSuffix=core.windows.net",
+    "ServiceUrl": "https://teststoragealpha013.blob.core.windows.net",
+    "PublicBaseUrl": "https://teststoragealpha013.blob.core.windows.net"
   }
 }
 ```

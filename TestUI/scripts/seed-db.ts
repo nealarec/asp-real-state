@@ -216,10 +216,10 @@ async function addPropertyTraces(propertyId: string, count: number): Promise<voi
   const tracePromises = Array.from({ length: count }, async (_, index) => {
     const traceData: PropertyTrace = {
       idProperty: propertyId,
-      dateSale: faker.date.past(5).toISOString(),
+      dateSale: faker.date.past({ years: 5 }).toISOString(),
       name: `Trace ${index + 1} for property ${propertyId}`,
-      value: faker.number.float({ min: 10000, max: 1000000, precision: 2 }),
-      tax: faker.number.float({ min: 100, max: 10000, precision: 2 }),
+      value: faker.number.float({ min: 10000, max: 1000000, multipleOf: 0.01 }),
+      tax: faker.number.float({ min: 100, max: 10000, multipleOf: 0.01 }),
     };
 
     try {

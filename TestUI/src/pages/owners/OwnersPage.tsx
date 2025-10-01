@@ -8,6 +8,7 @@ import { OwnerCard } from "@/components/Molecules/OwnerCard";
 import { OwnerFormModal } from "@/components/Molecules/OwnerFormModal";
 import type { Owner } from "@/schemas/Owner";
 import toast from "react-hot-toast";
+import { useDebounce } from "@/hooks/useDebounce";
 
 export default function OwnersPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -16,11 +17,8 @@ export default function OwnersPage() {
   const [searchTerm, setSearchTerm] = useState(searchParams.get("search") || "");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
-  const { data, isLoading, createOwner } = useOwners({
-    page,
-    pageSize,
-    search: searchTerm,
-  });
+  const search = useDebounce(searchTerm, 500);
+  const { data, isLoading, createOwner } = useOwners({ page, pageSize, search });
 
   const owners = data?.data || [];
   const totalCount = data?.totalCount || 0;

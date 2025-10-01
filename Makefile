@@ -11,7 +11,7 @@ APP_NAME=test-app-$(APP_ID)
 COSMOS_NAME=test-mongodb-$(APP_ID)
 STORAGE_NAME=teststorage$(APP_ID)
 
-.PHONY: check-az login provision frontend backend publish deploy config test clean
+.PHONY: check-az login provision frontend backend publish deploy config test clean seed
 
 check-az:
 	@which az >/dev/null 2>&1 || (echo "❌ Azure CLI (az) no está instalado"; exit 1)
@@ -118,3 +118,6 @@ destroy: check-az login
 	else \
 	  echo "❌ Operación cancelada"; \
 	fi
+
+seed:
+	cd TestUI && npm install && npm run seed -- --owners=1500              

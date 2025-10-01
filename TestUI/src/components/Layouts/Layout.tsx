@@ -14,8 +14,9 @@ const Layout = ({ children }: LayoutProps) => {
           <div className="flex justify-between h-16">
             <div className="flex">
               <div className="flex-shrink-0 flex items-center">
-                <Link to="/" className="text-xl font-bold text-gray-800">
-Real Estate App
+                <Link to="/" className="text-xl font-bold flex items-center text-gray-800">
+                  <img src="/favicon.png" alt="Logo" className="w-8 h-8 mr-2" />
+                  Restate
                 </Link>
               </div>
               <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
